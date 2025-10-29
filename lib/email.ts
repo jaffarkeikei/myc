@@ -34,7 +34,7 @@ export async function sendRoastConfirmationEmails(data: RoastConfirmationEmailDa
 
     // Email to applicant
     await client.emails.send({
-      from: 'MYC <roasts@myc.app>',
+      from: 'MYC <hello@myc-roast.com>',
       to: applicantEmail,
       subject: '🔥 Your MYC roast session is confirmed!',
       html: `
@@ -118,7 +118,7 @@ export async function sendRoastConfirmationEmails(data: RoastConfirmationEmailDa
 
     // Email to roaster
     await client.emails.send({
-      from: 'MYC <roasts@myc.app>',
+      from: 'MYC <hello@myc-roast.com>',
       to: roasterEmail,
       subject: '🔥 Roast session confirmed - Ready to give feedback!',
       html: `
@@ -219,7 +219,7 @@ export async function sendNewRequestNotification(
     const client = getResendClient()
 
     await client.emails.send({
-      from: 'MYC <roasts@myc.app>',
+      from: 'MYC <hello@myc-roast.com>',
       to: roasterEmail,
       subject: '🔥 New roast request from ' + applicantName,
       html: `

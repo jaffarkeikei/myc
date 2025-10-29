@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       
       // Send confirmation email via Resend
       await resend.emails.send({
-        from: 'MYC <roasts@myc.app>',
+        from: 'MYC <hello@myc-roast.com>',
         to: email,
         subject: '🔥 Confirm your MYC account',
         html: generateConfirmationEmail(confirmationUrl)
