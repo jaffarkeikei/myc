@@ -16,38 +16,28 @@ export async function canMakeRequest(applicantId: string): Promise<{
 }> {
   const supabase = createClient()
 
-  // Check daily limit
-  const today = new Date().toISOString().split('T')[0]
-  const trackingResult = await supabase
-    .from('request_tracking')
-    .select('request_count, last_rejection_at')
-    .eq('applicant_id', applicantId)
-    .eq('date', today)
-    .single()
+  // Count today's requests from meetings table
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
 
-  const tracking = trackingResult.data as any
-  const requestsUsed = tracking?.request_count || 0
+  const { data: meetings, error } = await supabase
+    .from('meetings')
+    .select('id, requested_at')
+    .eq('applicant_id', applicantId)
+    .gte('requested_at', todayStart.toISOString())
+
+  if (error) {
+    console.error('Error checking request limit:', error)
+    return { canRequest: true, requestsUsed: 0 }
+  }
+
+  const requestsUsed = meetings?.length || 0
 
   if (requestsUsed >= DAILY_REQUEST_LIMIT) {
     return {
       canRequest: false,
       requestsUsed,
       reason: `Daily limit reached (${DAILY_REQUEST_LIMIT}/day)`
-    }
-  }
-
-  // Check cooldown after rejection
-  if (tracking?.last_rejection_at) {
-    const lastRejection = new Date(tracking.last_rejection_at)
-    const hoursSince = (Date.now() - lastRejection.getTime()) / (1000 * 60 * 60)
-
-    if (hoursSince < COOLDOWN_HOURS) {
-      const hoursRemaining = Math.ceil(COOLDOWN_HOURS - hoursSince)
-      return {
-        canRequest: false,
-        requestsUsed,
-        reason: `Cooldown active. Try again in ${hoursRemaining} hours`
-      }
     }
   }
 
@@ -75,47 +65,23 @@ export async function hasRequestedRoaster(
 
 /**
  * Increment request count for applicant
+ * Note: Request count is now tracked via meetings table, so this is a no-op
  */
-export async function incrementRequestCount(applicantId: string): Promise<void> {
-  const supabase = createClient()
-  const today = new Date().toISOString().split('T')[0]
-
-  await (supabase as any)
-    .from('request_tracking')
-    .upsert({
-      applicant_id: applicantId,
-      date: today,
-      request_count: 1
-    }, {
-      onConflict: 'applicant_id,date',
-      ignoreDuplicates: false
-    })
-
-  // Also add to request history
-  await (supabase as any)
-    .from('request_tracking')
-    .update({
-      request_count: supabase.rpc('request_tracking.request_count + 1')
-    })
-    .eq('applicant_id', applicantId)
-    .eq('date', today)
+export async function incrementRequestCount(_applicantId: string): Promise<void> {
+  // No longer needed - we count meetings directly
+  return Promise.resolve()
 }
 
 /**
  * Add to request history (prevent duplicate requests to same roaster)
+ * Note: Request history is now tracked via meetings table, so this is a no-op
  */
 export async function addToRequestHistory(
-  applicantId: string,
-  reviewerId: string
+  _applicantId: string,
+  _reviewerId: string
 ): Promise<void> {
-  const supabase = createClient()
-
-  await (supabase as any)
-    .from('request_history')
-    .insert({
-      applicant_id: applicantId,
-      reviewer_id: reviewerId
-    })
+  // No longer needed - we track via meetings table
+  return Promise.resolve()
 }
 
 /**
