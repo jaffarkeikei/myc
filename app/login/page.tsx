@@ -22,6 +22,28 @@ function LoginForm() {
     if (mode === 'signup') {
       setIsSignUp(true)
     }
+
+    // Check if user is already logged in
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        // User is already logged in, check if they've completed onboarding
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile && (profile as any).name) {
+          router.push('/dashboard')
+        } else {
+          router.push('/onboarding')
+        }
+      }
+    }
+
+    checkSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -31,21 +53,36 @@ function LoginForm() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/onboarding`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
         if (error) throw error
-        setError('Check your email for the confirmation link!')
+
+        // Check if email confirmation is required
+        if (data.user && !data.session) {
+          // Email confirmation required
+          setError('Check your email for the confirmation link!')
+        } else if (data.session) {
+          // Auto-confirmed (email confirmation disabled in Supabase)
+          router.push('/onboarding')
+        }
       } else {
         const { data: authData, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (error) throw error
+
+        // Check if email is verified
+        if (authData.user && !authData.user.email_confirmed_at) {
+          setError('Please verify your email before logging in. Check your inbox for the confirmation link.')
+          await supabase.auth.signOut()
+          return
+        }
 
         // Check if user has completed onboarding
         const { data: profile } = await supabase
