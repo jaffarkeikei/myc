@@ -11,9 +11,10 @@ interface RoastCardProps {
   onRequestRoast: (reviewerId: string, roastType: string) => Promise<void>
   currentUserId: string
   canRequest?: boolean
+  alreadyRequested?: boolean
 }
 
-export default function RoastCard({ reviewer, onRequestRoast, currentUserId, canRequest = true }: RoastCardProps) {
+export default function RoastCard({ reviewer, onRequestRoast, currentUserId, canRequest = true, alreadyRequested = false }: RoastCardProps) {
   const [showModal, setShowModal] = useState(false)
   const [selectedType, setSelectedType] = useState<string>('application')
   const [loading, setLoading] = useState(false)
@@ -100,11 +101,13 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId, can
 
         <button
           onClick={() => setShowModal(true)}
-          disabled={!reviewer.is_available || !canRequest}
+          disabled={!reviewer.is_available || !canRequest || alreadyRequested}
           className="w-full mt-auto py-2 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {!reviewer.is_available
             ? 'Currently Unavailable'
+            : alreadyRequested
+            ? 'Already Requested'
             : !canRequest
             ? 'Daily Limit Reached'
             : 'Request Roast'}

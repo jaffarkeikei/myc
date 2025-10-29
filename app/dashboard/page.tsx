@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [requestsUsed, setRequestsUsed] = useState(0)
   const [canRequest, setCanRequest] = useState(true)
   const [limitReason, setLimitReason] = useState('')
+  const [requestedReviewerIds, setRequestedReviewerIds] = useState<Set<string>>(new Set())
 
   // For roasters
   const [priorityQueue, setPriorityQueue] = useState<Meeting[]>([])
@@ -181,7 +182,16 @@ export default function DashboardPage() {
     }
 
     const { data } = await query
-    setMeetings(data || [])
+    const meetingsData = (data || []) as Meeting[]
+    setMeetings(meetingsData)
+
+    // For applicants, track which reviewers they've already requested
+    if (profile.role === 'applicant' && meetingsData) {
+      const requestedIds = new Set(
+        meetingsData.map(meeting => meeting.reviewer_id)
+      )
+      setRequestedReviewerIds(requestedIds)
+    }
   }
 
   const handleRequestRoast = async (reviewerId: string, roastType: string) => {
@@ -411,6 +421,7 @@ export default function DashboardPage() {
                         onRequestRoast={handleRequestRoast}
                         currentUserId={currentUser.id}
                         canRequest={canRequest}
+                        alreadyRequested={requestedReviewerIds.has(reviewer.id)}
                       />
                     ))}
                   </div>
