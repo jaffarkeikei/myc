@@ -386,80 +386,41 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Featured Roaster */}
-            {featuredRoaster && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span style={{ color: COLORS.primary }}>Featured Roaster</span>
-                  <span className="text-sm font-normal text-gray-500">Top pick for you</span>
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <RoastCard
-                    reviewer={featuredRoaster}
-                    onRequestRoast={handleRequestRoast}
-                    currentUserId={currentUser.id}
-                    canRequest={canRequest}
-                  />
-                </div>
-              </div>
-            )}
+            {/* All Roasters - Combined List */}
+            {(() => {
+              // Combine all roasters in order: featured, industry matches, wildcard, browse
+              const allRoasters = [
+                ...(featuredRoaster ? [featuredRoaster] : []),
+                ...industryMatches,
+                ...(wildcardRoaster ? [wildcardRoaster] : []),
+                ...browseRoasters.slice(0, 6)
+              ]
 
-            {/* Industry Matches */}
-            {industryMatches.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Matched to Your Industry</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {industryMatches.map((reviewer) => (
-                    <RoastCard
-                      key={reviewer.id}
-                      reviewer={reviewer}
-                      onRequestRoast={handleRequestRoast}
-                      currentUserId={currentUser.id}
-                      canRequest={canRequest}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+              // Remove duplicates by id
+              const uniqueRoasters = allRoasters.filter((roaster, index, self) =>
+                index === self.findIndex(r => r.id === roaster.id)
+              )
 
-            {/* Wildcard */}
-            {wildcardRoaster && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Fresh Perspective</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <RoastCard
-                    reviewer={wildcardRoaster}
-                    onRequestRoast={handleRequestRoast}
-                    currentUserId={currentUser.id}
-                    canRequest={canRequest}
-                  />
+              return uniqueRoasters.length > 0 ? (
+                <div className="mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {uniqueRoasters.map((reviewer) => (
+                      <RoastCard
+                        key={reviewer.id}
+                        reviewer={reviewer}
+                        onRequestRoast={handleRequestRoast}
+                        currentUserId={currentUser.id}
+                        canRequest={canRequest}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Browse More */}
-            {browseRoasters.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Browse More Roasters</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {browseRoasters.slice(0, 6).map((reviewer) => (
-                    <RoastCard
-                      key={reviewer.id}
-                      reviewer={reviewer}
-                      onRequestRoast={handleRequestRoast}
-                      currentUserId={currentUser.id}
-                      canRequest={canRequest}
-                    />
-                  ))}
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  {MESSAGES.dashboard.noRoasters}
                 </div>
-              </div>
-            )}
-
-            {!featuredRoaster && industryMatches.length === 0 && browseRoasters.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                {MESSAGES.dashboard.noRoasters}
-              </div>
-            )}
+              )
+            })()}
           </div>
         ) : activeTab === 'find' && currentUser.role === 'reviewer' ? (
           <div>

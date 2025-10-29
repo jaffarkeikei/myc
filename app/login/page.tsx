@@ -41,7 +41,7 @@ function LoginForm() {
         if (error) throw error
         setError('Check your email for the confirmation link!')
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
@@ -51,6 +51,7 @@ function LoginForm() {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
+          .eq('id', authData.user!.id)
           .single()
 
         if (profile && (profile as any).name) {
