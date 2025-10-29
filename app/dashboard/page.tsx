@@ -99,8 +99,8 @@ export default function DashboardPage() {
         await loadRoasterView(profile.id)
       }
 
-      // Load meetings for both
-      await loadMeetings()
+      // Load meetings for both - pass profile directly to avoid timing issues
+      await loadMeetings(profile)
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
@@ -161,8 +161,9 @@ export default function DashboardPage() {
     }
   }
 
-  const loadMeetings = async () => {
-    if (!currentUser) return
+  const loadMeetings = async (userProfile?: Profile) => {
+    const profile = userProfile || currentUser
+    if (!profile) return
 
     const query = supabase
       .from('meetings')
@@ -173,10 +174,10 @@ export default function DashboardPage() {
       `)
       .order('requested_at', { ascending: false })
 
-    if (currentUser.role === 'applicant') {
-      query.eq('applicant_id', currentUser.id)
+    if (profile.role === 'applicant') {
+      query.eq('applicant_id', profile.id)
     } else {
-      query.eq('reviewer_id', currentUser.id)
+      query.eq('reviewer_id', profile.id)
     }
 
     const { data } = await query
@@ -462,7 +463,7 @@ export default function DashboardPage() {
           </div>
         ) : activeTab === 'find' && currentUser.role === 'reviewer' ? (
           <div>
-            <h2 className="text-2xl font-bold mb-4">Priority Queue</h2>
+            <h2 className="text-xl font-semibold mb-4">Priority Queue</h2>
             {priorityQueue.length > 0 ? (
               <MeetingList
                 meetings={priorityQueue}
