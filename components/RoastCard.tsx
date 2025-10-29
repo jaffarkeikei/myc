@@ -46,7 +46,7 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId, can
 
   return (
     <>
-      <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-orange-300 transition-all hover:shadow-lg">
+      <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-orange-300 transition-all hover:shadow-lg h-full flex flex-col">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
             <h3 className="font-semibold text-lg text-gray-900">{reviewer.name}</h3>
@@ -79,7 +79,7 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId, can
           ))}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-4">
           {reviewer.industry && (
             <span className="text-xs px-2 py-1 bg-gray-50 text-gray-600 rounded">
               {reviewer.industry}
@@ -90,7 +90,7 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId, can
         <button
           onClick={() => setShowModal(true)}
           disabled={!reviewer.is_available || !canRequest}
-          className="w-full mt-4 py-2 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full mt-auto py-2 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {!reviewer.is_available
             ? 'Currently Unavailable'

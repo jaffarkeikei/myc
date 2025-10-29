@@ -375,7 +375,7 @@ export default function DashboardPage() {
                   <span style={{ color: COLORS.primary }}>Featured Roaster</span>
                   <span className="text-sm font-normal text-gray-500">Top pick for you</span>
                 </h2>
-                <div className="max-w-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <RoastCard
                     reviewer={featuredRoaster}
                     onRequestRoast={handleRequestRoast}
@@ -390,7 +390,7 @@ export default function DashboardPage() {
             {industryMatches.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Matched to Your Industry</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {industryMatches.map((reviewer) => (
                     <RoastCard
                       key={reviewer.id}
@@ -408,7 +408,7 @@ export default function DashboardPage() {
             {wildcardRoaster && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Fresh Perspective</h2>
-                <div className="max-w-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <RoastCard
                     reviewer={wildcardRoaster}
                     onRequestRoast={handleRequestRoast}
