@@ -13,6 +13,9 @@ function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSent, setResetSent] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -104,6 +107,125 @@ function LoginForm() {
     }
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      })
+      if (error) throw error
+
+      setResetSent(true)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white p-4">
+        <div className="w-full max-w-md">
+          {/* Back Button */}
+          <button
+            onClick={() => {
+              setShowForgotPassword(false)
+              setResetSent(false)
+              setError(null)
+            }}
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Login
+          </button>
+
+          {/* Logo and Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold mb-2 myc-font" style={{ color: COLORS.primary }}>
+              MYC
+            </h1>
+            <p className="text-xl text-gray-600">Reset your password</p>
+          </div>
+
+          {/* Reset Form */}
+          <div className="bg-white p-8 rounded-2xl shadow-xl roast-glow">
+            {resetSent ? (
+              <>
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📧</div>
+                  <h2 className="text-2xl font-bold mb-4 text-green-700">Check Your Email!</h2>
+                  <p className="text-gray-600 mb-6">
+                    We've sent a password reset link to <strong>{resetEmail}</strong>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Click the link in the email to reset your password. The link will expire in 1 hour.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowForgotPassword(false)
+                    setResetSent(false)
+                    setResetEmail('')
+                  }}
+                  className="w-full mt-6 py-3 px-4 rounded-md yc-button"
+                >
+                  Back to Login
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-2">🔐</div>
+                  <h2 className="text-2xl font-bold">Forgot Password?</h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Enter your email and we'll send you a reset link
+                  </p>
+                </div>
+
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div>
+                    <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      id="resetEmail"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="founder@startup.com"
+                      required
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="p-3 rounded-lg text-sm bg-red-50 text-red-700">
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md">
@@ -150,9 +272,20 @@ function LoginForm() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-xs text-orange-600 hover:text-orange-700 transition-colors"
+                  >
+                    Forgot?
+                  </button>
+                )}
+              </div>
               <input
                 id="password"
                 type="password"

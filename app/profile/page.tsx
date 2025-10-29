@@ -19,10 +19,16 @@ export default function ProfilePage() {
   const [ycBatch, setYcBatch] = useState('')
   const [linkedin, setLinkedin] = useState('')
   const [xTwitter, setXTwitter] = useState('')
+  const [currentEmail, setCurrentEmail] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [showEmailChange, setShowEmailChange] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [changingEmail, setChangingEmail] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [emailSuccess, setEmailSuccess] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -38,6 +44,8 @@ export default function ProfilePage() {
         router.push('/login')
         return
       }
+
+      setCurrentEmail(user.email || '')
 
       const profileResult = await supabase
         .from('profiles')
@@ -75,6 +83,28 @@ export default function ProfilePage() {
       }
       return [...prev, type]
     })
+  }
+
+  const handleEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setChangingEmail(true)
+    setEmailError(null)
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail,
+      }, {
+        emailRedirectTo: `${window.location.origin}/auth/callback?type=email_change`,
+      })
+
+      if (error) throw error
+
+      setEmailSuccess(true)
+    } catch (err: any) {
+      setEmailError(err.message)
+    } finally {
+      setChangingEmail(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -333,6 +363,96 @@ export default function ProfilePage() {
         <p className="text-center text-xs text-gray-500 mt-8 mb-4">
           Changes will be visible to other users immediately
         </p>
+
+        {/* Account Settings Section */}
+        <div className="mt-8 p-6 bg-gray-50 rounded-2xl border border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Account Settings</h3>
+          
+          {/* Current Email Display */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-900">{currentEmail}</span>
+              <button
+                type="button"
+                onClick={() => setShowEmailChange(!showEmailChange)}
+                className="text-sm text-orange-600 hover:text-orange-700 transition-colors font-medium"
+              >
+                {showEmailChange ? 'Cancel' : 'Change Email'}
+              </button>
+            </div>
+          </div>
+
+          {/* Email Change Form */}
+          {showEmailChange && !emailSuccess && (
+            <form onSubmit={handleEmailChange} className="space-y-4 mt-4 p-4 bg-white rounded-lg border border-orange-200">
+              <div>
+                <label htmlFor="newEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                  New Email Address
+                </label>
+                <input
+                  id="newEmail"
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="newemail@example.com"
+                  required
+                />
+              </div>
+
+              {emailError && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">
+                  {emailError}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={changingEmail || !newEmail}
+                  className="flex-1 py-2 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {changingEmail ? 'Sending...' : 'Send Confirmation Email'}
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-600">
+                We'll send a confirmation email to your new address. Click the link in that email to complete the change.
+              </p>
+            </form>
+          )}
+
+          {/* Email Change Success */}
+          {emailSuccess && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">✉️</div>
+                <div>
+                  <h4 className="font-bold text-green-900 mb-1">Check Your Email!</h4>
+                  <p className="text-sm text-green-800 mb-2">
+                    We've sent a confirmation link to <strong>{newEmail}</strong>
+                  </p>
+                  <p className="text-xs text-green-700">
+                    Click the link in that email to complete the email change. Your current email will remain active until you confirm.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setEmailSuccess(false)
+                      setShowEmailChange(false)
+                      setNewEmail('')
+                    }}
+                    className="mt-3 text-sm text-green-700 hover:text-green-900 font-medium"
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
