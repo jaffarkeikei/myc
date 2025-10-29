@@ -325,6 +325,23 @@ export default function DashboardPage() {
               Find Roasters
             </button>
           )}
+          {currentUser.role === 'reviewer' && (
+            <button
+              onClick={() => setActiveTab('find')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'find'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              Priority Queue
+              {priorityQueue.filter(m => m.status === 'requested').length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                  {priorityQueue.filter(m => m.status === 'requested').length}
+                </span>
+              )}
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('meetings')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -333,8 +350,8 @@ export default function DashboardPage() {
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
-            {currentUser.role === 'applicant' ? 'My Roast Requests' : 'Roast Requests'}
-            {meetings.filter(m => m.status === 'requested').length > 0 && (
+            {currentUser.role === 'applicant' ? 'My Roast Requests' : 'All Roast Requests'}
+            {currentUser.role === 'applicant' && meetings.filter(m => m.status === 'requested').length > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
                 {meetings.filter(m => m.status === 'requested').length}
               </span>
