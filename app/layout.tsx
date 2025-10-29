@@ -17,13 +17,14 @@ export const metadata: Metadata = {
   description: "Get your YC application roasted in 10-minute sessions. Direct feedback from YC alumni and experts.",
   icons: {
     icon: [
-      { url: '/favicon.ico?v=2', sizes: '32x32', type: 'image/x-icon' },
-      { url: '/favicon-192.png?v=2', sizes: '192x192', type: 'image/png' },
-      { url: '/favicon-512.png?v=2', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.ico?v=3', sizes: '32x32', type: 'image/x-icon' },
+      { url: '/favicon-192.png?v=3', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon-512.png?v=3', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png?v=2', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-touch-icon.png?v=3', sizes: '180x180', type: 'image/png' },
     ],
+    shortcut: '/favicon.ico?v=3',
   },
 };
 
