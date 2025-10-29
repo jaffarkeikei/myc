@@ -16,6 +16,8 @@ function LoginForm() {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState(false)
+  const [hasExistingSession, setHasExistingSession] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -26,22 +28,38 @@ function LoginForm() {
       setIsSignUp(true)
     }
 
+    // Don't auto-redirect if user explicitly wants to see login page
+    // (e.g., to sign in as a different user)
+    const forceLogin = searchParams.get('force')
+    if (forceLogin === 'true') {
+      return
+    }
+
     // Check if user is already logged in
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
+        setHasExistingSession(true)
+        
         // User is already logged in, check if they've completed onboarding
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
 
-        if (profile && (profile as any).name) {
-          router.push('/dashboard')
-        } else {
-          router.push('/onboarding')
+        // Only redirect if we successfully got profile data
+        if (!profileError && profile) {
+          if ((profile as any).name) {
+            // Profile complete, go to dashboard
+            router.push('/dashboard')
+          } else {
+            // Profile incomplete, go to onboarding
+            router.push('/onboarding')
+          }
         }
+      } else {
+        setHasExistingSession(false)
       }
     }
 
@@ -123,6 +141,21 @@ function LoginForm() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    setSigningOut(true)
+    try {
+      await supabase.auth.signOut()
+      setHasExistingSession(false)
+      setError(null)
+      // Force reload to clear any cached state
+      window.location.href = '/login'
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSigningOut(false)
     }
   }
 
@@ -251,6 +284,22 @@ function LoginForm() {
 
         {/* Auth Form */}
         <div className="bg-white p-8 rounded-2xl shadow-xl roast-glow">
+          {hasExistingSession && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-blue-800">You're already signed in</p>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+                >
+                  {signingOut ? 'Signing out...' : 'Sign out'}
+                </button>
+              </div>
+            </div>
+          )}
+          
           <h2 className="text-2xl font-bold mb-6 text-center">
             {isSignUp ? 'Join the Roast' : 'Welcome Back'}
           </h2>
