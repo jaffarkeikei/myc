@@ -62,23 +62,6 @@ export default function Home() {
 
           {/* Footer */}
           <div className="mt-24 pt-8 border-t border-gray-200">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-              <a
-                href="https://discord.gg/myc"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-600 hover:text-orange-600 transition-colors"
-              >
-                Join our community
-              </a>
-              <span className="hidden sm:inline text-gray-300">•</span>
-              <a
-                href="mailto:hello@myc.app"
-                className="text-sm text-gray-600 hover:text-orange-600 transition-colors"
-              >
-                Contact us
-              </a>
-            </div>
             <p className="text-xs text-gray-400 text-center">
               By using <span className="myc-font" style={{ color: '#FF6600' }}>MYC</span>, you agree to receive brutally honest feedback
             </p>
