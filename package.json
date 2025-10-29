@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed-database.ts"
+    "seed": "tsx scripts/seed-database.ts",
+    "migrate:role-protection": "tsx scripts/apply-role-protection.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

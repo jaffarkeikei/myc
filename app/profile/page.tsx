@@ -96,7 +96,7 @@ export default function ProfilePage() {
       const { error: profileError } = await (supabase as any)
         .from('profiles')
         .update({
-          role,
+          // Note: role is intentionally excluded - users cannot change their role after initial setup
           roast_preferences: roastPreferences,
           industry,
           quick_context: quickContext,
@@ -156,37 +156,18 @@ export default function ProfilePage() {
 
         {/* Profile Form */}
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl roast-glow">
-          {/* Section 1: Role Selection */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              I want to:
+          {/* Current Role Display (read-only) */}
+          <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your Role:
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setRole('applicant')}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  role === 'applicant'
-                    ? 'border-orange-500 bg-orange-50 text-orange-700'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="font-medium">Get Roasted</div>
-                <div className="text-sm text-gray-500">I'm a YC applicant</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRole('reviewer')}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  role === 'reviewer'
-                    ? 'border-orange-500 bg-orange-50 text-orange-700'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="font-medium">Give Roasts</div>
-                <div className="text-sm text-gray-500">I'm YC alumni/expert</div>
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="px-4 py-2 rounded-lg bg-orange-100 text-orange-700 font-medium">
+                {role === 'applicant' ? 'Get Roasted (YC Applicant)' : 'Give Roasts (YC Alumni/Expert)'}
+              </div>
+              <span className="text-xs text-gray-500">
+                (Role cannot be changed after initial setup)
+              </span>
             </div>
           </div>
 

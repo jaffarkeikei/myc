@@ -135,6 +135,25 @@ DROP TRIGGER IF EXISTS on_meeting_completed ON public.meetings;
 CREATE TRIGGER on_meeting_completed
   AFTER UPDATE ON public.meetings
   FOR EACH ROW EXECUTE FUNCTION public.increment_roast_count();
+
+-- Function to prevent role changes after initial setup
+DROP FUNCTION IF EXISTS public.prevent_role_change() CASCADE;
+CREATE OR REPLACE FUNCTION public.prevent_role_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If this is an update operation and the role is being changed
+  IF TG_OP = 'UPDATE' AND OLD.role IS DISTINCT FROM NEW.role THEN
+    RAISE EXCEPTION 'Role cannot be changed after initial setup';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to enforce immutable role
+DROP TRIGGER IF EXISTS enforce_immutable_role ON public.profiles;
+CREATE TRIGGER enforce_immutable_role
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_role_change();
 `;
 
 function executeSQL(sql) {
