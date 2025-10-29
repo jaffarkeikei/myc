@@ -24,6 +24,8 @@ export interface Database {
           yc_batch: string | null
           linkedin: string | null
           x_twitter: string | null
+          featured_until: string | null
+          last_featured: string | null
           created_at: string
         }
         Insert: {
@@ -40,6 +42,8 @@ export interface Database {
           yc_batch?: string | null
           linkedin?: string | null
           x_twitter?: string | null
+          featured_until?: string | null
+          last_featured?: string | null
           created_at?: string
         }
         Update: {
@@ -56,6 +60,8 @@ export interface Database {
           yc_batch?: string | null
           linkedin?: string | null
           x_twitter?: string | null
+          featured_until?: string | null
+          last_featured?: string | null
           created_at?: string
         }
       }
@@ -70,6 +76,8 @@ export interface Database {
           notes: string | null
           feedback_helpful: boolean | null
           requested_at: string
+          accepted_at: string | null
+          expires_at: string | null
           scheduled_for: string | null
           completed_at: string | null
         }
@@ -83,6 +91,8 @@ export interface Database {
           notes?: string | null
           feedback_helpful?: boolean | null
           requested_at?: string
+          accepted_at?: string | null
+          expires_at?: string | null
           scheduled_for?: string | null
           completed_at?: string | null
         }
@@ -96,8 +106,56 @@ export interface Database {
           notes?: string | null
           feedback_helpful?: boolean | null
           requested_at?: string
+          accepted_at?: string | null
+          expires_at?: string | null
           scheduled_for?: string | null
           completed_at?: string | null
+        }
+      }
+      request_tracking: {
+        Row: {
+          id: string
+          applicant_id: string
+          date: string
+          request_count: number
+          last_rejection_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          applicant_id: string
+          date: string
+          request_count?: number
+          last_rejection_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          applicant_id?: string
+          date?: string
+          request_count?: number
+          last_rejection_at?: string | null
+          created_at?: string
+        }
+      }
+      request_history: {
+        Row: {
+          id: string
+          applicant_id: string
+          reviewer_id: string
+          requested_at: string
+        }
+        Insert: {
+          id?: string
+          applicant_id: string
+          reviewer_id: string
+          requested_at?: string
+        }
+        Update: {
+          id?: string
+          applicant_id?: string
+          reviewer_id?: string
+          requested_at?: string
         }
       }
     }

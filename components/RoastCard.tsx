@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ROAST_TYPES, COLORS } from '@/lib/constants'
 import { Database } from '@/lib/database.types'
+import { createRoastRequest } from '@/lib/meetings'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
@@ -10,20 +11,32 @@ interface RoastCardProps {
   reviewer: Profile
   onRequestRoast: (reviewerId: string, roastType: string) => Promise<void>
   currentUserId: string
+  canRequest?: boolean
 }
 
-export default function RoastCard({ reviewer, onRequestRoast, currentUserId }: RoastCardProps) {
+export default function RoastCard({ reviewer, onRequestRoast, currentUserId, canRequest = true }: RoastCardProps) {
   const [showModal, setShowModal] = useState(false)
   const [selectedType, setSelectedType] = useState<string>('application')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleRequest = async () => {
+    if (!canRequest) return
+
     setLoading(true)
+    setError(null)
     try {
-      await onRequestRoast(reviewer.id, selectedType)
-      setShowModal(false)
+      const result = await createRoastRequest(currentUserId, reviewer.id, selectedType)
+
+      if (result.success) {
+        setShowModal(false)
+        await onRequestRoast(reviewer.id, selectedType) // Trigger parent refresh
+      } else {
+        setError(result.error || 'Failed to send request')
+      }
     } catch (error) {
       console.error('Error requesting roast:', error)
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -76,10 +89,14 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId }: R
 
         <button
           onClick={() => setShowModal(true)}
-          disabled={!reviewer.is_available}
+          disabled={!reviewer.is_available || !canRequest}
           className="w-full mt-4 py-2 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {reviewer.is_available ? 'Request Roast' : 'Currently Unavailable'}
+          {!reviewer.is_available
+            ? 'Currently Unavailable'
+            : !canRequest
+            ? 'Daily Limit Reached'
+            : 'Request Roast'}
         </button>
       </div>
 
@@ -115,6 +132,12 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId }: R
                 </button>
               ))}
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
+                {error}
+              </div>
+            )}
 
             <div className="flex gap-3">
               <button
