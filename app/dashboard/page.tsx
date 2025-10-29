@@ -7,14 +7,14 @@ import RoastCard from '@/components/RoastCard'
 import MeetingList from '@/components/MeetingList'
 import ProfileDropdown from '@/components/ProfileDropdown'
 import { Database } from '@/lib/database.types'
-import { MESSAGES, COLORS, ROAST_TYPES } from '@/lib/constants'
+import { MESSAGES, COLORS } from '@/lib/constants'
 import {
   canMakeRequest,
   getMatchesForApplicant,
   getPriorityQueueForRoaster,
   DAILY_REQUEST_LIMIT
 } from '@/lib/matching'
-import { acceptRoastRequest, completeMeeting } from '@/lib/meetings'
+import { completeMeeting } from '@/lib/meetings'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 type Meeting = Database['public']['Tables']['meetings']['Row'] & {
@@ -194,7 +194,7 @@ export default function DashboardPage() {
     }
   }
 
-  const handleRequestRoast = async (reviewerId: string, roastType: string) => {
+  const handleRequestRoast = async (_reviewerId: string, _roastType: string) => {
     if (!currentUser) return
 
     // This function is now handled by RoastCard component
@@ -205,10 +205,21 @@ export default function DashboardPage() {
   const handleUpdateMeeting = async (meetingId: string, updates: any) => {
     try {
       if (updates.status === 'accepted') {
-        // Use new acceptance flow with Google Meet
-        const result = await acceptRoastRequest(meetingId, currentUser!.id)
+        // Use API route for acceptance flow with Google Meet
+        const response = await fetch('/api/accept-roast', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            meetingId,
+            roasterId: currentUser!.id
+          }),
+        })
 
-        if (result.success) {
+        const result = await response.json()
+
+        if (response.ok && result.success) {
           setSuccessMessage('Roast accepted! Meeting link sent via email 🔥')
           await loadMeetings()
           setTimeout(() => setSuccessMessage(null), 5000)

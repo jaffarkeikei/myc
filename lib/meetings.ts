@@ -22,6 +22,8 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
   const supabase = createClient()
 
   try {
+    console.log('acceptRoastRequest called with:', { meetingId, roasterId })
+
     // Get meeting details
     const meetingResult = await supabase
       .from('meetings')
@@ -35,9 +37,16 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
       .eq('status', 'requested')
       .single()
 
+    console.log('Meeting query result:', { error: meetingResult.error, data: meetingResult.data })
+
     const meeting = meetingResult.data as any
 
-    if (meetingResult.error || !meeting) {
+    if (meetingResult.error) {
+      console.error('Meeting query error:', meetingResult.error)
+      throw new Error(`Database error: ${meetingResult.error.message}`)
+    }
+
+    if (!meeting) {
       throw new Error('Meeting not found or already processed')
     }
 
