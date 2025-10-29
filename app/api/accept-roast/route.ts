@@ -3,11 +3,13 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sendRoastConfirmationEmails } from '@/lib/email'
 
 /**
- * Generate a unique Google Meet link
+ * Generate a unique meeting link using Jitsi Meet
+ * Jitsi is free, open-source, and works reliably without API setup
  */
-function generateGoogleMeetLink(): string {
-  const uniqueId = Math.random().toString(36).substring(2, 15)
-  return `https://meet.google.com/${uniqueId}`
+function generateMeetingLink(): string {
+  // Generate a unique room name
+  const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+  return `https://meet.jit.si/myc-roast-${uniqueId}`
 }
 
 export async function POST(request: NextRequest) {
@@ -58,8 +60,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate Google Meet link
-    const meetLink = generateGoogleMeetLink()
+    // Generate meeting link
+    const meetLink = generateMeetingLink()
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
 

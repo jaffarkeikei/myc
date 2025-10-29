@@ -205,7 +205,7 @@ export default function DashboardPage() {
   const handleUpdateMeeting = async (meetingId: string, updates: any) => {
     try {
       if (updates.status === 'accepted') {
-        // Use API route for acceptance flow with Google Meet
+        // Use API route for acceptance flow with Jitsi Meet
         const response = await fetch('/api/accept-roast', {
           method: 'POST',
           headers: {

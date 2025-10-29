@@ -24,7 +24,7 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   const handleAccept = async (meetingId: string) => {
     setLoading(meetingId)
     try {
-      // Generate a simple meeting link (in production, integrate with Zoom/Google Meet API)
+      // Generate a simple meeting link (using Jitsi Meet)
       const meetingLink = `https://meet.jit.si/myc-roast-${meetingId.slice(0, 8)}`
       await onUpdateMeeting(meetingId, {
         status: 'accepted',

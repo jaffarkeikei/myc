@@ -6,13 +6,13 @@ import { addToRequestHistory, incrementRequestCount } from './matching'
 type Meeting = Database['public']['Tables']['meetings']['Row']
 
 /**
- * Generate a unique Google Meet link
- * For MVP, using meet.new format which creates instant meetings
+ * Generate a unique meeting link using Jitsi Meet
+ * Jitsi is free, open-source, and works reliably without API setup
  */
-export function generateGoogleMeetLink(): string {
-  // Generate a unique ID for the meeting
-  const uniqueId = Math.random().toString(36).substring(2, 15)
-  return `https://meet.google.com/${uniqueId}`
+export function generateMeetingLink(): string {
+  // Generate a unique room name
+  const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+  return `https://meet.jit.si/myc-roast-${uniqueId}`
 }
 
 /**
@@ -50,8 +50,8 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
       throw new Error('Meeting not found or already processed')
     }
 
-    // Generate Google Meet link
-    const meetLink = generateGoogleMeetLink()
+    // Generate meeting link
+    const meetLink = generateMeetingLink()
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
 
