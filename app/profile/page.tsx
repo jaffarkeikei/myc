@@ -128,7 +128,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white p-4">
+    <div className="min-h-screen bg-white p-4">
       <div className="max-w-2xl mx-auto pt-12">
         {/* Header */}
         <div className="mb-8">
@@ -342,7 +342,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving || !name}
-            className="w-full py-3 px-4 text-white font-medium rounded-lg yc-gradient hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            className="w-full py-3 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

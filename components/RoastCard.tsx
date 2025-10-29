@@ -77,7 +77,7 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId }: R
         <button
           onClick={() => setShowModal(true)}
           disabled={!reviewer.is_available}
-          className="w-full mt-4 py-2 px-4 text-white font-medium rounded-lg yc-gradient hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          className="w-full mt-4 py-2 px-4 rounded-md yc-button disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {reviewer.is_available ? 'Request Roast' : 'Currently Unavailable'}
         </button>
@@ -126,7 +126,7 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId }: R
               <button
                 onClick={handleRequest}
                 disabled={loading}
-                className="flex-1 py-2 px-4 text-white font-medium rounded-lg yc-gradient hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="flex-1 py-2 px-4 rounded-md yc-button disabled:opacity-50"
               >
                 {loading ? 'Requesting...' : 'Send Request'}
               </button>
