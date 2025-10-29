@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { ROAST_TYPES, COLORS } from '@/lib/constants'
 import { Database } from '@/lib/database.types'
-import { createRoastRequest } from '@/lib/meetings'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
@@ -26,9 +25,21 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId, can
     setLoading(true)
     setError(null)
     try {
-      const result = await createRoastRequest(currentUserId, reviewer.id, selectedType)
+      const response = await fetch('/api/roast-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          applicantId: currentUserId,
+          reviewerId: reviewer.id,
+          roastType: selectedType,
+        }),
+      })
 
-      if (result.success) {
+      const result = await response.json()
+
+      if (response.ok && result.success) {
         setShowModal(false)
         await onRequestRoast(reviewer.id, selectedType) // Trigger parent refresh
       } else {

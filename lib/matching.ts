@@ -120,50 +120,28 @@ export async function addToRequestHistory(
 
 /**
  * Get featured roaster (rotates daily)
+ * Note: Featured columns disabled temporarily due to PostgREST cache issues
  */
 export async function getFeaturedRoaster(): Promise<Profile | null> {
   const supabase = createClient()
 
-  // Try to get currently featured roaster
-  const { data: featured } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'reviewer')
-    .eq('is_available', true)
-    .gt('featured_until', new Date().toISOString())
-    .single()
-
-  if (featured) {
-    return featured as Profile
-  }
-
-  // No featured roaster, select one and mark as featured
-  const newFeaturedResult = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'reviewer')
-    .eq('is_available', true)
-    .or(`last_featured.is.null,last_featured.lt.${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}`)
-    .order('roast_count', { ascending: false })
-    .limit(1)
-    .single()
-
-  const newFeatured = newFeaturedResult.data as Profile | null
-
-  if (newFeatured) {
-    // Mark as featured for 24 hours
-    await (supabase as any)
+  try {
+    // Simple query: get top reviewer by roast count
+    // TODO: Re-enable featured_until logic once PostgREST schema cache is stable
+    const { data: featured } = await supabase
       .from('profiles')
-      .update({
-        featured_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        last_featured: new Date().toISOString()
-      })
-      .eq('id', newFeatured.id)
+      .select('*')
+      .eq('role', 'reviewer')
+      .eq('is_available', true)
+      .order('roast_count', { ascending: false })
+      .limit(1)
+      .single()
 
-    return newFeatured
+    return featured as Profile | null
+  } catch (error) {
+    console.error('Error getting featured roaster:', error)
+    return null
   }
-
-  return null
 }
 
 /**
