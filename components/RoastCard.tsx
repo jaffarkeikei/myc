@@ -46,7 +46,7 @@ export default function RoastCard({ reviewer, onRequestRoast, currentUserId, can
 
   return (
     <>
-      <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-orange-300 transition-all hover:shadow-lg h-full flex flex-col">
+      <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-orange-300 transition-all hover:shadow-lg h-full min-h-[320px] flex flex-col">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
             <h3 className="font-semibold text-lg text-gray-900">{reviewer.name}</h3>
