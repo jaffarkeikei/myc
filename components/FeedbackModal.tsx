@@ -99,7 +99,7 @@ export default function FeedbackModal({
           <div className="text-center py-8">
             <h3 className="text-xl font-bold mb-2">Thanks for the feedback!</h3>
             <p className="text-gray-600">
-              Your input helps make MYC better for everyone
+              Your input helps make <span className="myc-font" style={{ color: '#FF6600' }}>MYC</span> better for everyone
             </p>
           </div>
         )}

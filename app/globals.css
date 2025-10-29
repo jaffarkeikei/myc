@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'KP Primary Penmanship';
+  src: url('/fonts/KPPrimaryPenmanship.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --yc-orange: #FF6600;
   --yc-orange-light: #FFF5EC;
@@ -30,6 +38,10 @@ body {
 
   .roast-glow {
     box-shadow: 0 0 20px rgba(255, 102, 0, 0.1);
+  }
+
+  .myc-font {
+    font-family: 'KP Primary Penmanship', cursive;
   }
 }
 

@@ -82,7 +82,7 @@ function LoginForm() {
 
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2" style={{ color: COLORS.primary }}>
+          <h1 className="text-5xl font-bold mb-2 myc-font" style={{ color: COLORS.primary }}>
             MYC
           </h1>
           <p className="text-xl text-gray-600">Get your YC application roasted</p>
@@ -163,7 +163,7 @@ function LoginForm() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-500 mt-8">
-          By using MYC, you agree to receive brutally honest feedback.
+          By using <span className="myc-font" style={{ color: '#FF6600' }}>MYC</span>, you agree to receive brutally honest feedback.
         </p>
       </div>
     </div>

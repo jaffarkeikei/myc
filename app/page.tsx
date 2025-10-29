@@ -8,7 +8,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
         <div className="text-center">
           {/* Logo and Title */}
-          <h1 className="text-6xl sm:text-8xl font-bold mb-6" style={{ color: COLORS.primary }}>
+          <h1 className="text-6xl sm:text-8xl font-bold mb-6 myc-font" style={{ color: COLORS.primary }}>
             MYC
           </h1>
 
@@ -99,7 +99,7 @@ export default function Home() {
               </a>
             </div>
             <p className="text-xs text-gray-400 text-center">
-              By using MYC, you agree to receive brutally honest feedback
+              By using <span className="myc-font" style={{ color: '#FF6600' }}>MYC</span>, you agree to receive brutally honest feedback
             </p>
           </div>
         </div>
