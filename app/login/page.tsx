@@ -81,7 +81,17 @@ function LoginForm() {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
-        if (error) throw error
+        
+        // Enhanced error logging
+        if (error) {
+          console.error('Signup error details:', {
+            message: error.message,
+            status: error.status,
+            name: error.name,
+            stack: error.stack
+          })
+          throw error
+        }
 
         // Check if email confirmation is required
         if (data.user && !data.session) {

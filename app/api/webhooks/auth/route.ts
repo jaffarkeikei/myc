@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     const expectedAuth = `Bearer ${process.env.WEBHOOK_SECRET}`
     
     if (authHeader !== expectedAuth) {
+      console.error('Webhook auth failed:', { received: authHeader, expected: expectedAuth ? 'exists' : 'missing' })
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -18,32 +19,35 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = await request.json()
+    console.log('Received webhook payload:', JSON.stringify(payload, null, 2))
     
-    // Check if this is a new user signup
-    const { type, record } = payload
+    // NOTE: This webhook may not be needed - Supabase handles email confirmation natively
+    // If you're getting 500 errors during signup, consider disabling this webhook
+    // and using Supabase's built-in email templates instead
     
-    if (type === 'INSERT' && record) {
-      const { email, id, confirmation_token } = record
+    // Check if this is a new user signup from auth.users table
+    const { type, table, record, old_record } = payload
+    
+    if (type === 'INSERT' && table === 'users' && record) {
+      const { email, id } = record
       
-      // Generate confirmation URL
-      const confirmationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?token=${confirmation_token}`
+      console.log('New user signup detected:', { email, id })
       
-      // Send confirmation email via Resend
-      await resend.emails.send({
-        from: 'MYC <hello@myc-roast.com>',
-        to: email,
-        subject: '🔥 Confirm your MYC account',
-        html: generateConfirmationEmail(confirmationUrl)
+      // Note: confirmation_token is not available in webhooks for security reasons
+      // Supabase handles email confirmation automatically
+      // This webhook is only for custom post-signup actions
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'User signup processed (email handled by Supabase)' 
       })
-      
-      return NextResponse.json({ success: true })
     }
     
     return NextResponse.json({ message: 'No action needed' })
   } catch (error) {
     console.error('Webhook error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
