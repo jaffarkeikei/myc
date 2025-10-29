@@ -195,7 +195,7 @@ function generateConfirmationEmail(confirmationUrl: string): string {
               <strong>MYC</strong> - 10-minute sessions. No DMs. Just feedback.
             </p>
             <p style="margin-top: 10px;">
-              Questions? Reply to this email or visit <a href="https://myc.app">myc.app</a>
+              Questions? Reply to this email or visit <a href="https://myc-roast.com">myc-roast.com</a>
             </p>
           </div>
         </div>

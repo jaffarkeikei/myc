@@ -273,7 +273,7 @@ export async function sendNewRequestNotification(
 
             <p>Log in to your dashboard to accept or decline this request:</p>
 
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://myc.app'}/dashboard" class="button">View Request</a>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://myc-roast.com'}/dashboard" class="button">View Request</a>
           </body>
         </html>
       `
