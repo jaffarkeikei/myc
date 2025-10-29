@@ -1,6 +1,18 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy load Resend to avoid client-side initialization
+let resend: Resend | null = null
+
+function getResendClient() {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY is not set in environment variables')
+    }
+    resend = new Resend(apiKey)
+  }
+  return resend
+}
 
 export interface RoastConfirmationEmailData {
   applicantName: string
@@ -18,8 +30,10 @@ export async function sendRoastConfirmationEmails(data: RoastConfirmationEmailDa
   const { applicantName, applicantEmail, roasterName, roasterEmail, meetingLink, roastType } = data
 
   try {
+    const client = getResendClient()
+
     // Email to applicant
-    await resend.emails.send({
+    await client.emails.send({
       from: 'MYC <roasts@myc.app>',
       to: applicantEmail,
       subject: '🔥 Your MYC roast session is confirmed!',
@@ -103,7 +117,7 @@ export async function sendRoastConfirmationEmails(data: RoastConfirmationEmailDa
     })
 
     // Email to roaster
-    await resend.emails.send({
+    await client.emails.send({
       from: 'MYC <roasts@myc.app>',
       to: roasterEmail,
       subject: '🔥 Roast session confirmed - Ready to give feedback!',
@@ -202,7 +216,9 @@ export async function sendNewRequestNotification(
   roastType: string
 ) {
   try {
-    await resend.emails.send({
+    const client = getResendClient()
+
+    await client.emails.send({
       from: 'MYC <roasts@myc.app>',
       to: roasterEmail,
       subject: '🔥 New roast request from ' + applicantName,
