@@ -85,10 +85,13 @@ function LoginForm() {
 
         // Check if email confirmation is required
         if (data.user && !data.session) {
-          // Email confirmation required
-          setError('Check your email for the confirmation link!')
+          // Email confirmation required - show success message
+          setError(`🎉 Account created! Check your email (${email}) for the confirmation link. Click it to complete your signup.`)
+          setEmail('')
+          setPassword('')
         } else if (data.session) {
           // Auto-confirmed (email confirmation disabled in Supabase)
+          // This should not happen in production - email confirmation should be enabled
           router.push('/onboarding')
         }
       } else {
@@ -349,9 +352,9 @@ function LoginForm() {
 
             {error && (
               <div className={`p-3 rounded-lg text-sm ${
-                error.includes('Check your email')
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-red-50 text-red-700'
+                error.includes('Check your email') || error.includes('Account created') || error.includes('🎉')
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
               }`}>
                 {error}
               </div>
