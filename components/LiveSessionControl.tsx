@@ -264,9 +264,21 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
             <div>
               <p className="text-sm font-medium text-orange-900">Current Session</p>
               <p className="text-lg font-semibold">{(currentEntry.applicant as any)?.name || 'Unknown'}</p>
-              {currentEntry.status === 'your_turn' && (
+              {currentEntry.status === 'your_turn' && (currentEntry as any).meeting?.meeting_link && (
+                <div className="mt-2">
+                  <a
+                    href={(currentEntry as any).meeting.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Join Meeting →
+                  </a>
+                </div>
+              )}
+              {currentEntry.status === 'your_turn' && !(currentEntry as any).meeting?.meeting_link && (
                 <p className="text-xs text-orange-600 mt-1">
-                  Waiting to join...
+                  Preparing meeting link...
                 </p>
               )}
               {currentEntry.status === 'joined' && (

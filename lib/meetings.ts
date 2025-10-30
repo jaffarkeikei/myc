@@ -6,18 +6,18 @@ import { addToRequestHistory, incrementRequestCount } from './matching'
 type Meeting = Database['public']['Tables']['meetings']['Row']
 
 /**
- * Generate a unique meeting link using Talky.io
- * Talky.io is completely free, instant, and requires no moderation or login
- * Both participants can join directly and start the meeting immediately
+ * Generate a unique meeting link using Jitsi Meet
+ * Clean, reliable, free video conferencing
+ * Note: First person to join may need to click "I am the moderator" button
  */
 export function generateMeetingLink(): string {
   // Generate a unique room name
   const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-  const roomName = `myc-roast-${uniqueId}`
+  const roomName = `MYC-Roast-${uniqueId}`
 
-  // Talky.io format: https://talky.io/room-name
-  // Truly instant - no setup, API keys, or moderation needed
-  return `https://talky.io/${roomName}`
+  // Using meet.jit.si - clean interface, no ads
+  // First person clicks "I am the moderator" to start
+  return `https://meet.jit.si/${roomName}`
 }
 
 /**

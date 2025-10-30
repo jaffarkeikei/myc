@@ -555,7 +555,8 @@ export async function getSessionQueue(sessionId: string) {
       .from('queue_entries')
       .select(`
         *,
-        applicant:applicant_id(*)
+        applicant:applicant_id(*),
+        meeting:meeting_id(*)
       `)
       .eq('live_session_id', sessionId)
       .in('status', ['waiting', 'your_turn', 'joined'])

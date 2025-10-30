@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MYC - Get Your YC Application Roasted",
-  description: "Get your YC application roasted in 10-minute sessions. Direct feedback from YC alumni and experts.",
+  description: "YC changed your life, now it's your turn.",
   // Favicons are automatically loaded from /app directory (favicon.ico, icon.png, apple-icon.png)
 };
 
