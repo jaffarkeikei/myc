@@ -42,14 +42,9 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   const handleAccept = async (meetingId: string) => {
     setLoading(meetingId)
     try {
-      // Generate a meeting link with Jitsi Meet
-      const roomName = `MYC-Roast-${meetingId.slice(0, 8)}`
-      const meetingLink = `https://meet.jit.si/${roomName}`
-
+      // Meeting link generation happens server-side via /api/accept-roast
       await onUpdateMeeting(meetingId, {
-        status: 'accepted',
-        meeting_link: meetingLink,
-        scheduled_for: new Date(Date.now() + 5 * 60000).toISOString() // 5 minutes from now
+        status: 'accepted'
       })
     } catch (error) {
       console.error('Error accepting meeting:', error)

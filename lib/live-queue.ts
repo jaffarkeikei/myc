@@ -247,7 +247,7 @@ export async function processNextInQueue(sessionId: string, reviewerId: string) 
     }
 
     // Create meeting for this person
-    const meetingLink = generateMeetingLink()
+    const meetingLink = await generateMeetingLink()
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
 
