@@ -3,19 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import RoastCard from '@/components/RoastCard'
 import MeetingList from '@/components/MeetingList'
 import ProfileDropdown from '@/components/ProfileDropdown'
 import LiveSessionControl from '@/components/LiveSessionControl'
 import LiveRoastersList from '@/components/LiveRoastersList'
 import { Database } from '@/lib/database.types'
-import { MESSAGES, COLORS } from '@/lib/constants'
-import {
-  canMakeRequest,
-  getMatchesForApplicant,
-  getPriorityQueueForRoaster,
-  DAILY_REQUEST_LIMIT
-} from '@/lib/matching'
+import { COLORS } from '@/lib/constants'
 import { completeMeeting } from '@/lib/meetings'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -27,22 +20,12 @@ type Meeting = Database['public']['Tables']['meetings']['Row'] & {
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
 
-  // For applicants
-  const [featuredRoaster, setFeaturedRoaster] = useState<Profile | null>(null)
-  const [industryMatches, setIndustryMatches] = useState<Profile[]>([])
-  const [wildcardRoaster, setWildcardRoaster] = useState<Profile | null>(null)
-  const [browseRoasters, setBrowseRoasters] = useState<Profile[]>([])
-  const [requestsUsed, setRequestsUsed] = useState(0)
-  const [canRequest, setCanRequest] = useState(true)
-  const [limitReason, setLimitReason] = useState('')
+  // For applicants (no longer used, kept for potential future features)
   const [requestedReviewerIds, setRequestedReviewerIds] = useState<Set<string>>(new Set())
-
-  // For roasters
-  const [priorityQueue, setPriorityQueue] = useState<Meeting[]>([])
 
   // Common
   const [meetings, setMeetings] = useState<Meeting[]>([])
-  const [activeTab, setActiveTab] = useState<'find' | 'live' | 'meetings'>('find')
+  const [activeTab, setActiveTab] = useState<'find' | 'live' | 'meetings'>('live')
   const [loading, setLoading] = useState(true)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -95,72 +78,12 @@ export default function DashboardPage() {
 
       setCurrentUser(profile)
 
-      // Load different data based on role
-      if (profile.role === 'applicant') {
-        await loadApplicantView(profile.id)
-      } else {
-        await loadRoasterView(profile.id)
-      }
-
       // Load meetings for both - pass profile directly to avoid timing issues
       await loadMeetings(profile)
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const loadApplicantView = async (applicantId: string) => {
-    try {
-      // Check request limits
-      const limitCheck = await canMakeRequest(applicantId)
-      setCanRequest(limitCheck.canRequest)
-      setRequestsUsed(limitCheck.requestsUsed)
-      if (limitCheck.reason) {
-        setLimitReason(limitCheck.reason)
-      }
-
-      // Get matched roasters
-      const matches = await getMatchesForApplicant(applicantId)
-      setFeaturedRoaster(matches.featured)
-      setIndustryMatches(matches.industryMatches)
-      setWildcardRoaster(matches.wildcard)
-
-      // Get additional roasters for "browse more"
-      const { data: browse } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'reviewer')
-        .eq('is_available', true)
-        .order('roast_count', { ascending: false })
-        .limit(10)
-
-      setBrowseRoasters(browse || [])
-    } catch (error) {
-      console.error('Error loading applicant view:', error)
-    }
-  }
-
-  const loadRoasterView = async (roasterId: string) => {
-    try {
-      const queue = await getPriorityQueueForRoaster(roasterId)
-
-      // Combine all priority items
-      const allPriority = [
-        ...queue.industryMatches,
-        ...queue.recentRequests,
-        ...(queue.wildcard ? [queue.wildcard] : [])
-      ]
-
-      // Remove duplicates
-      const uniquePriority = allPriority.filter((item, index, self) =>
-        index === self.findIndex(t => t.id === item.id)
-      )
-
-      setPriorityQueue(uniquePriority as Meeting[])
-    } catch (error) {
-      console.error('Error loading roaster view:', error)
     }
   }
 
@@ -258,19 +181,6 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
-  const toggleAvailability = async () => {
-    if (!currentUser) return
-
-    const newAvailability = !currentUser.is_available
-    const { error } = await (supabase as any)
-      .from('profiles')
-      .update({ is_available: newAvailability })
-      .eq('id', currentUser.id)
-
-    if (!error) {
-      setCurrentUser({ ...currentUser, is_available: newAvailability })
-    }
-  }
 
   if (loading) {
     return (
@@ -289,29 +199,12 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              {/* Roasts Counter */}
-              <div
-                className="px-4 py-2 rounded-lg font-medium"
-                style={{
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8833 100%)',
-                  color: 'white'
-                }}
-              >
-                {currentUser.roast_count} roasts
-              </div>
-
-              {currentUser.role === 'reviewer' && (
-                <button
-                  onClick={toggleAvailability}
-                  className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                    currentUser.is_available
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {currentUser.is_available ? 'Available' : 'Busy'}
-                </button>
-              )}
+              {/* MYC Logo */}
+              <img
+                src="/logo/new-myc.png"
+                alt="MYC"
+                className="h-12 w-auto"
+              />
             </div>
 
             {/* Profile Dropdown */}
@@ -337,35 +230,6 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
-          {currentUser.role === 'applicant' && (
-            <button
-              onClick={() => setActiveTab('find')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === 'find'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Find Roasters
-            </button>
-          )}
-          {currentUser.role === 'reviewer' && (
-            <button
-              onClick={() => setActiveTab('find')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === 'find'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Priority Queue
-              {priorityQueue.filter(m => m.status === 'requested').length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                  {priorityQueue.filter(m => m.status === 'requested').length}
-                </span>
-              )}
-            </button>
-          )}
           <button
             onClick={() => setActiveTab('live')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -374,7 +238,7 @@ export default function DashboardPage() {
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
-            🔴 Live Queue
+            🔴 {currentUser.role === 'applicant' ? 'Live Roasters' : 'Live Queue'}
           </button>
           <button
             onClick={() => setActiveTab('meetings')}
@@ -384,7 +248,7 @@ export default function DashboardPage() {
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
-            {currentUser.role === 'applicant' ? 'My Roast Requests' : 'All Roast Requests'}
+            {currentUser.role === 'applicant' ? 'Roast History' : 'All Roast Requests'}
             {currentUser.role === 'applicant' && meetings.filter(m => m.status === 'requested').length > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
                 {meetings.filter(m => m.status === 'requested').length}
@@ -405,92 +269,13 @@ export default function DashboardPage() {
               <LiveRoastersList applicantId={currentUser.id} />
             )}
           </div>
-        ) : activeTab === 'find' && currentUser.role === 'applicant' ? (
-          <div>
-            {/* Daily Limit Counter */}
-            <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Daily Requests</h3>
-                  <p className="text-sm text-gray-600">
-                    {requestsUsed}/{DAILY_REQUEST_LIMIT} used today
-                  </p>
-                </div>
-                {!canRequest && (
-                  <div className="text-sm text-orange-600 font-medium">
-                    {limitReason}
-                  </div>
-                )}
-              </div>
-              <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-orange-500 transition-all"
-                  style={{ width: `${(requestsUsed / DAILY_REQUEST_LIMIT) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* All Roasters - Combined List */}
-            {(() => {
-              // Combine all roasters in order: featured, industry matches, wildcard, browse
-              const allRoasters = [
-                ...(featuredRoaster ? [featuredRoaster] : []),
-                ...industryMatches,
-                ...(wildcardRoaster ? [wildcardRoaster] : []),
-                ...browseRoasters.slice(0, 6)
-              ]
-
-              // Remove duplicates by id
-              const uniqueRoasters = allRoasters.filter((roaster, index, self) =>
-                index === self.findIndex(r => r.id === roaster.id)
-              )
-
-              return uniqueRoasters.length > 0 ? (
-                <div className="mb-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {uniqueRoasters.map((reviewer) => (
-                      <RoastCard
-                        key={reviewer.id}
-                        reviewer={reviewer}
-                        onRequestRoast={handleRequestRoast}
-                        currentUserId={currentUser.id}
-                        canRequest={canRequest}
-                        alreadyRequested={requestedReviewerIds.has(reviewer.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  {MESSAGES.dashboard.noRoasters}
-                </div>
-              )
-            })()}
-          </div>
-        ) : activeTab === 'find' && currentUser.role === 'reviewer' ? (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Priority Queue</h2>
-            {priorityQueue.length > 0 ? (
-              <MeetingList
-                meetings={priorityQueue}
-                currentUserId={currentUser.id}
-                userRole={currentUser.role}
-                onUpdateMeeting={handleUpdateMeeting}
-              />
-            ) : (
-              <div className="text-center py-12 text-gray-500 bg-white rounded-lg">
-                <p className="text-lg mb-2">No pending requests</p>
-                <p className="text-sm">Check back later for new roast requests!</p>
-              </div>
-            )}
-          </div>
         ) : (
           <div>
             <h2 className="text-xl font-semibold mb-4">
-              {currentUser.role === 'applicant' ? 'Your Roast Requests' : 'All Roast Requests'}
+              {currentUser.role === 'applicant' ? 'Roast History' : 'All Roast Requests'}
             </h2>
             <MeetingList
-              meetings={meetings}
+              meetings={currentUser.role === 'applicant' ? meetings.filter(m => m.status === 'completed') : meetings}
               currentUserId={currentUser.id}
               userRole={currentUser.role}
               onUpdateMeeting={handleUpdateMeeting}
