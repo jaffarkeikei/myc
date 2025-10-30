@@ -3,7 +3,7 @@ import { Database } from './database.types'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
-export const DAILY_REQUEST_LIMIT = 3
+export const DAILY_REQUEST_LIMIT = 5
 export const COOLDOWN_HOURS = 48
 
 /**
