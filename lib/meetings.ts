@@ -8,11 +8,28 @@ type Meeting = Database['public']['Tables']['meetings']['Row']
 /**
  * Generate a unique meeting link using Jitsi Meet
  * Jitsi is free, open-source, and works reliably without API setup
+ * Configured to bypass moderation and allow direct joining
  */
 export function generateMeetingLink(): string {
   // Generate a unique room name
   const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-  return `https://meet.jit.si/myc-roast-${uniqueId}`
+  const roomName = `myc-roast-${uniqueId}`
+
+  // Add configuration parameters to bypass lobby, moderation, and pre-join screens
+  const config = [
+    'config.prejoinPageEnabled=false',           // Skip pre-join page
+    'config.requireDisplayName=false',           // Don't require display name
+    'config.enableWelcomePage=false',            // Disable welcome page
+    'config.disableModeratorIndicator=true',     // No moderator badge
+    'config.startWithAudioMuted=false',          // Start with audio on
+    'config.startWithVideoMuted=false',          // Start with video on
+    'config.enableLobbyChat=false',              // Disable lobby
+    'config.hideConferenceSubject=true',         // Hide room subject
+    'config.hideConferenceTimer=false',          // Show timer
+    'config.disableInviteFunctions=true'         // Disable invite functions
+  ].join('&')
+
+  return `https://meet.jit.si/${roomName}#${config}`
 }
 
 /**

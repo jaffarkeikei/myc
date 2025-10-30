@@ -42,8 +42,22 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   const handleAccept = async (meetingId: string) => {
     setLoading(meetingId)
     try {
-      // Generate a simple meeting link (using Jitsi Meet)
-      const meetingLink = `https://meet.jit.si/myc-roast-${meetingId.slice(0, 8)}`
+      // Generate a meeting link with Jitsi Meet configured to bypass moderation
+      const roomName = `myc-roast-${meetingId.slice(0, 8)}`
+      const config = [
+        'config.prejoinPageEnabled=false',
+        'config.requireDisplayName=false',
+        'config.enableWelcomePage=false',
+        'config.disableModeratorIndicator=true',
+        'config.startWithAudioMuted=false',
+        'config.startWithVideoMuted=false',
+        'config.enableLobbyChat=false',
+        'config.hideConferenceSubject=true',
+        'config.hideConferenceTimer=false',
+        'config.disableInviteFunctions=true'
+      ].join('&')
+      const meetingLink = `https://meet.jit.si/${roomName}#${config}`
+
       await onUpdateMeeting(meetingId, {
         status: 'accepted',
         meeting_link: meetingLink,

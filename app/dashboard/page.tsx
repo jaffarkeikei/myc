@@ -203,7 +203,7 @@ export default function DashboardPage() {
               <img
                 src="/logo/new-myc.png"
                 alt="MYC"
-                className="h-12 w-auto"
+                className="h-12 w-auto rounded-lg"
               />
             </div>
 
