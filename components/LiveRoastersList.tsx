@@ -56,7 +56,8 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
     return () => {
       channel.unsubscribe()
     }
-  }, [applicantId, sessions])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicantId])
 
   const loadLiveSessions = async () => {
     const result = await getActiveLiveRoasters()

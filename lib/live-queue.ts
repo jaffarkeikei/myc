@@ -185,14 +185,10 @@ export async function joinQueue(sessionId: string, applicantId: string) {
       throw entryError
     }
 
-    // Update session queue size
-    await supabase
-      .from('live_sessions')
-      // @ts-ignore
-      .update({
-        current_queue_size: session.current_queue_size + 1
-      })
-      .eq('id', sessionId)
+    // Update session queue size using database function (bypasses RLS)
+    await supabase.rpc('increment_queue_size', {
+      session_id: sessionId
+    })
 
     return {
       success: true,
@@ -360,21 +356,10 @@ export async function completeQueueEntry(entryId: string) {
       throw error
     }
 
-    // Decrement queue size
-    const { data: session } = await supabase
-      .from('live_sessions')
-      .select('current_queue_size')
-      .eq('id', entry.live_session_id)
-      .single()
-
-    if (session) {
-      await supabase
-        .from('live_sessions')
-        .update({
-          current_queue_size: Math.max(0, session.current_queue_size - 1)
-        })
-        .eq('id', entry.live_session_id)
-    }
+    // Decrement queue size using database function (bypasses RLS)
+    await supabase.rpc('decrement_queue_size', {
+      session_id: entry.live_session_id
+    })
 
     return { success: true }
   } catch (error: any) {
@@ -420,21 +405,10 @@ export async function skipQueueEntry(entryId: string, reviewerId: string) {
       throw error
     }
 
-    // Decrement queue size
-    const { data: session } = await supabase
-      .from('live_sessions')
-      .select('current_queue_size')
-      .eq('id', entry.live_session_id)
-      .single()
-
-    if (session) {
-      await supabase
-        .from('live_sessions')
-        .update({
-          current_queue_size: Math.max(0, session.current_queue_size - 1)
-        })
-        .eq('id', entry.live_session_id)
-    }
+    // Decrement queue size using database function (bypasses RLS)
+    await supabase.rpc('decrement_queue_size', {
+      session_id: entry.live_session_id
+    })
 
     return { success: true }
   } catch (error: any) {
