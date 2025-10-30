@@ -2,60 +2,36 @@ import { createClient } from './supabase'
 import { sendRoastConfirmationEmails, sendNewRequestNotification } from './email'
 import { Database } from './database.types'
 import { addToRequestHistory, incrementRequestCount } from './matching'
+import { createGoogleMeetLink } from './google-meet'
 
 type Meeting = Database['public']['Tables']['meetings']['Row']
 
 /**
- * Generate a unique meeting link using Daily.co API
- * Creates a temporary room that both participants can join instantly
- * No moderation, no login required
+ * Generate a unique meeting link using Google Meet via Calendar API
+ * Creates a Calendar event with Google Meet enabled
+ * Each roast session gets its own unique meeting link
  */
-export async function generateMeetingLink(): Promise<string> {
-  try {
-    const apiKey = process.env.DAILY_API_KEY
+export async function generateMeetingLink(
+  applicantEmail: string,
+  applicantName: string,
+  roasterEmail: string,
+  roasterName: string,
+  roastType?: string,
+  durationMinutes: number = 15
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  const result = await createGoogleMeetLink({
+    applicantEmail,
+    applicantName,
+    roasterEmail,
+    roasterName,
+    roastType,
+    durationMinutes
+  })
 
-    if (!apiKey) {
-      throw new Error('DAILY_API_KEY not configured')
-    }
-
-    // Generate a unique room name
-    const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-    const roomName = `myc-roast-${uniqueId}`
-
-    // Create a Daily.co room via REST API
-    const response = await fetch('https://api.daily.co/v1/rooms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        name: roomName,
-        privacy: 'public', // Anyone with link can join
-        properties: {
-          enable_prejoin_ui: false, // Skip pre-join screen
-          enable_network_ui: false, // Hide network stats
-          enable_screenshare: true,
-          enable_chat: true,
-          start_video_off: false,
-          start_audio_off: false,
-          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Expires in 24 hours
-        }
-      })
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Daily.co API error: ${error}`)
-    }
-
-    const data = await response.json()
-    return data.url // Returns the meeting URL
-  } catch (error) {
-    console.error('Error creating Daily.co room:', error)
-    // Fallback to a simple meet.jit.si link if API fails
-    const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-    return `https://meet.jit.si/MYC-Roast-${uniqueId}`
+  return {
+    success: result.success,
+    url: result.meetLink,
+    error: result.error
   }
 }
 
@@ -94,8 +70,25 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
       throw new Error('Meeting not found or already processed')
     }
 
-    // Generate meeting link
-    const meetLink = await generateMeetingLink()
+    // Get applicant and reviewer details
+    const applicant = meeting.applicant as any
+    const reviewer = meeting.reviewer as any
+
+    // Generate meeting link with Google Meet
+    const meetLinkResult = await generateMeetingLink(
+      applicant.email || '',
+      applicant.name || 'Applicant',
+      reviewer.email || '',
+      reviewer.name || 'Roaster',
+      meeting.roast_type,
+      15 // 15 minutes duration
+    )
+
+    if (!meetLinkResult.success || !meetLinkResult.url) {
+      throw new Error(meetLinkResult.error || 'Failed to generate meeting link')
+    }
+
+    const meetLink = meetLinkResult.url
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
 
@@ -122,9 +115,6 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
     }
 
     // Send confirmation emails to both parties
-    const applicant = meeting.applicant as any
-    const reviewer = meeting.reviewer as any
-
     await sendRoastConfirmationEmails({
       applicantName: applicant.name || 'Applicant',
       applicantEmail: applicant.email || '',

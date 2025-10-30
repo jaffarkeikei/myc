@@ -1,56 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sendRoastConfirmationEmails } from '@/lib/email'
-
-/**
- * Generate a unique meeting link using Daily.co API
- * Creates a temporary room that both participants can join instantly
- */
-async function generateMeetingLink(): Promise<string> {
-  try {
-    const apiKey = process.env.DAILY_API_KEY
-
-    if (!apiKey) {
-      throw new Error('DAILY_API_KEY not configured')
-    }
-
-    const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-    const roomName = `myc-roast-${uniqueId}`
-
-    const response = await fetch('https://api.daily.co/v1/rooms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        name: roomName,
-        privacy: 'public',
-        properties: {
-          enable_prejoin_ui: false,
-          enable_network_ui: false,
-          enable_screenshare: true,
-          enable_chat: true,
-          start_video_off: false,
-          start_audio_off: false,
-          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-        }
-      })
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Daily.co API error: ${error}`)
-    }
-
-    const data = await response.json()
-    return data.url
-  } catch (error) {
-    console.error('Error creating Daily.co room:', error)
-    const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-    return `https://meet.jit.si/MYC-Roast-${uniqueId}`
-  }
-}
+import { generateMeetingLink } from '@/lib/meetings'
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,8 +51,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate meeting link
-    const meetLink = await generateMeetingLink()
+    // Get applicant and reviewer details
+    const applicant = meeting.applicant as any
+    const reviewer = meeting.reviewer as any
+
+    // Get roast type label
+    const roastTypeLabels: Record<string, string> = {
+      application: 'Application',
+      pitch: 'Pitch Deck',
+      idea: 'Idea'
+    }
+
+    // Generate meeting link with Google Meet
+    const meetLinkResult = await generateMeetingLink(
+      applicant.email || '',
+      applicant.name || 'Applicant',
+      reviewer.email || '',
+      reviewer.name || 'Roaster',
+      roastTypeLabels[meeting.roast_type] || meeting.roast_type,
+      15 // 15 minutes duration
+    )
+
+    if (!meetLinkResult.success || !meetLinkResult.url) {
+      console.error('Failed to generate meeting link:', meetLinkResult.error)
+      return NextResponse.json(
+        { error: meetLinkResult.error || 'Failed to generate meeting link' },
+        { status: 500 }
+      )
+    }
+
+    const meetLink = meetLinkResult.url
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
 
@@ -124,17 +103,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get roast type label
-    const roastTypeLabels: Record<string, string> = {
-      application: 'Application',
-      pitch: 'Pitch Deck',
-      idea: 'Idea'
-    }
-
     // Send confirmation emails to both parties
-    const applicant = meeting.applicant as any
-    const reviewer = meeting.reviewer as any
-
     try {
       await sendRoastConfirmationEmails({
         applicantName: applicant.name || 'Applicant',

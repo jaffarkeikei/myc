@@ -33,6 +33,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get reviewer info
+    const { data: reviewer } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', reviewerId)
+      .single()
+
+    if (!reviewer) {
+      return NextResponse.json(
+        { success: false, error: 'Reviewer not found' },
+        { status: 404 }
+      )
+    }
+
+    const reviewerAny = reviewer as any
+
     // Get next person in queue
     const { data: nextEntry, error: queryError } = await supabase
       .from('queue_entries')
@@ -56,12 +72,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create meeting for this person
-    const meetingLink = await generateMeetingLink()
+    const nextEntryAny = nextEntry as any
+    const applicant = nextEntryAny.applicant
+
+    // Create meeting link with Google Meet
+    const meetLinkResult = await generateMeetingLink(
+      applicant?.email || '',
+      applicant?.name || 'Applicant',
+      reviewerAny.email || '',
+      reviewerAny.name || 'Roaster',
+      'pitch', // Default roast type for live queue
+      15 // 15 minutes duration
+    )
+
+    if (!meetLinkResult.success || !meetLinkResult.url) {
+      console.error('Failed to generate meeting link:', meetLinkResult.error)
+      return NextResponse.json(
+        { success: false, error: meetLinkResult.error || 'Failed to generate meeting link' },
+        { status: 500 }
+      )
+    }
+
+    const meetingLink = meetLinkResult.url
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
-
-    const nextEntryAny = nextEntry as any
 
     console.log('Creating meeting for applicant:', nextEntryAny.applicant_id)
 
@@ -109,7 +143,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification to applicant
-    const applicant = (nextEntry as any)?.applicant
     if (applicant?.email) {
       try {
         await resend.emails.send({
