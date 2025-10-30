@@ -158,6 +158,82 @@ export interface Database {
           requested_at?: string
         }
       }
+      live_sessions: {
+        Row: {
+          id: string
+          reviewer_id: string
+          started_at: string
+          ends_at: string
+          max_queue_size: number
+          current_queue_size: number
+          status: 'active' | 'paused' | 'ended'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          reviewer_id: string
+          started_at?: string
+          ends_at: string
+          max_queue_size?: number
+          current_queue_size?: number
+          status?: 'active' | 'paused' | 'ended'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          reviewer_id?: string
+          started_at?: string
+          ends_at?: string
+          max_queue_size?: number
+          current_queue_size?: number
+          status?: 'active' | 'paused' | 'ended'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      queue_entries: {
+        Row: {
+          id: string
+          live_session_id: string
+          applicant_id: string
+          position: number
+          status: 'waiting' | 'your_turn' | 'skipped' | 'joined' | 'completed'
+          notified_at: string | null
+          joined_at: string | null
+          completed_at: string | null
+          meeting_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          live_session_id: string
+          applicant_id: string
+          position: number
+          status?: 'waiting' | 'your_turn' | 'skipped' | 'joined' | 'completed'
+          notified_at?: string | null
+          joined_at?: string | null
+          completed_at?: string | null
+          meeting_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          live_session_id?: string
+          applicant_id?: string
+          position?: number
+          status?: 'waiting' | 'your_turn' | 'skipped' | 'joined' | 'completed'
+          notified_at?: string | null
+          joined_at?: string | null
+          completed_at?: string | null
+          meeting_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase'
 import RoastCard from '@/components/RoastCard'
 import MeetingList from '@/components/MeetingList'
 import ProfileDropdown from '@/components/ProfileDropdown'
+import LiveSessionControl from '@/components/LiveSessionControl'
+import LiveRoastersList from '@/components/LiveRoastersList'
 import { Database } from '@/lib/database.types'
 import { MESSAGES, COLORS } from '@/lib/constants'
 import {
@@ -40,7 +42,7 @@ export default function DashboardPage() {
 
   // Common
   const [meetings, setMeetings] = useState<Meeting[]>([])
-  const [activeTab, setActiveTab] = useState<'find' | 'meetings'>('find')
+  const [activeTab, setActiveTab] = useState<'find' | 'live' | 'meetings'>('find')
   const [loading, setLoading] = useState(true)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -365,6 +367,16 @@ export default function DashboardPage() {
             </button>
           )}
           <button
+            onClick={() => setActiveTab('live')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'live'
+                ? 'bg-orange-500 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            🔴 Live Queue
+          </button>
+          <button
             onClick={() => setActiveTab('meetings')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === 'meetings'
@@ -382,7 +394,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Content */}
-        {activeTab === 'find' && currentUser.role === 'applicant' ? (
+        {activeTab === 'live' ? (
+          <div>
+            {currentUser.role === 'reviewer' ? (
+              <LiveSessionControl
+                reviewerId={currentUser.id}
+                onSessionChange={() => loadData()}
+              />
+            ) : (
+              <LiveRoastersList applicantId={currentUser.id} />
+            )}
+          </div>
+        ) : activeTab === 'find' && currentUser.role === 'applicant' ? (
           <div>
             {/* Daily Limit Counter */}
             <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
