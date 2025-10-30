@@ -502,18 +502,21 @@ export async function getQueuePosition(sessionId: string, applicantId: string) {
       }
     }
 
-    // Count how many people are ahead
-    const { count } = await supabase
+    // Get all entries in order to calculate actual position
+    const { data: allEntries } = await supabase
       .from('queue_entries')
-      .select('*', { count: 'exact', head: true })
+      .select('id, position')
       .eq('live_session_id', sessionId)
       .in('status', ['waiting', 'your_turn', 'joined'])
-      .lt('position', entry.position)
+      .order('position', { ascending: true })
+
+    // Find actual position in the ordered list
+    const actualPosition = (allEntries || []).findIndex(e => e.id === entry.id) + 1
 
     return {
       success: true,
       entry,
-      position: (count || 0) + 1
+      position: actualPosition || 1
     }
   } catch (error: any) {
     console.error('Error getting queue position:', error)
