@@ -28,6 +28,13 @@ function LoginForm() {
       setIsSignUp(true)
     }
 
+    // Check for error from callback redirect
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'invalid_link') {
+      setError('The reset link is invalid or has expired. Please request a new one.')
+      setShowForgotPassword(true)
+    }
+
     // Don't auto-redirect if user explicitly wants to see login page
     // (e.g., to sign in as a different user)
     const forceLogin = searchParams.get('force')
@@ -40,7 +47,7 @@ function LoginForm() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setHasExistingSession(true)
-        
+
         // User is already logged in, check if they've completed onboarding
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
