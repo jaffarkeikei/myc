@@ -282,9 +282,19 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
                 </p>
               )}
               {currentEntry.status === 'joined' && (
-                <p className="text-xs text-green-600 mt-1">
-                  In session
-                </p>
+                <div className="mt-2">
+                  <p className="text-xs text-green-600 mb-2">In session</p>
+                  {(currentEntry as any).meeting?.meeting_link && (
+                    <a
+                      href={(currentEntry as any).meeting.meeting_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Open Meeting Link →
+                    </a>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex gap-2">
