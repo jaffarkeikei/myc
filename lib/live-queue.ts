@@ -1,7 +1,6 @@
 // @ts-nocheck - Type issues with new live_sessions and queue_entries tables
 import { createClient } from './supabase'
 import { Database } from './database.types'
-import { generateMeetingLink } from './meetings'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row']
 type QueueEntry = Database['public']['Tables']['queue_entries']['Row']
@@ -206,93 +205,13 @@ export async function joinQueue(sessionId: string, applicantId: string) {
 
 /**
  * Get next person in queue and notify them
+ * NOTE: This function is deprecated. Use the /api/live-queue/process-next API route instead.
+ * Meeting link generation now happens server-side via Google Meet API.
  */
 export async function processNextInQueue(sessionId: string, reviewerId: string) {
-  const supabase = createClient()
-
-  try {
-    // Verify session belongs to reviewer
-    const { data: session } = await supabase
-      .from('live_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .eq('reviewer_id', reviewerId)
-      .single()
-
-    if (!session) {
-      return {
-        success: false,
-        error: 'Session not found or unauthorized'
-      }
-    }
-
-    // Get next person in queue
-    const { data: nextEntry, error: queryError } = await supabase
-      .from('queue_entries')
-      .select(`
-        *,
-        applicant:applicant_id(*)
-      `)
-      .eq('live_session_id', sessionId)
-      .eq('status', 'waiting')
-      .order('position', { ascending: true })
-      .limit(1)
-      .single()
-
-    if (queryError || !nextEntry) {
-      return {
-        success: false,
-        error: 'No one in queue'
-      }
-    }
-
-    // Create meeting for this person
-    const meetingLink = await generateMeetingLink()
-    const now = new Date()
-    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours
-
-    const { data: meeting, error: meetingError } = await supabase
-      .from('meetings')
-      .insert({
-        applicant_id: nextEntry.applicant_id,
-        reviewer_id: reviewerId,
-        roast_type: 'pitch', // Default, can be customized
-        status: 'accepted',
-        meeting_link: meetingLink,
-        accepted_at: now.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        scheduled_for: now.toISOString()
-      })
-      .select()
-      .single()
-
-    if (meetingError) {
-      throw meetingError
-    }
-
-    // Update queue entry
-    await supabase
-      .from('queue_entries')
-      // @ts-ignore
-      .update({
-        status: 'your_turn',
-        notified_at: now.toISOString(),
-        meeting_id: meeting.id
-      })
-      .eq('id', nextEntry.id)
-
-    return {
-      success: true,
-      entry: nextEntry,
-      meeting,
-      meetingLink
-    }
-  } catch (error: any) {
-    console.error('Error processing next in queue:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+  return {
+    success: false,
+    error: 'This function is deprecated. Use /api/live-queue/process-next instead.'
   }
 }
 
