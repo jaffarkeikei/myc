@@ -487,53 +487,53 @@ export async function getQueuePosition(sessionId: string, applicantId: string) {
   const supabase = createClient()
 
   try {
-    const { data: entry } = await supabase
-      .from('queue_entries')
-      .select('*')
-      .eq('live_session_id', sessionId)
-      .eq('applicant_id', applicantId)
-      .in('status', ['waiting', 'your_turn', 'joined'])
-      .single()
+    // Use database function to get position (bypasses RLS)
+    const { data, error } = await supabase
+      .rpc('get_queue_position', {
+        p_session_id: sessionId,
+        p_applicant_id: applicantId
+      })
 
-    if (!entry) {
+    if (error) {
+      console.error('Error calling get_queue_position:', error)
+      throw error
+    }
+
+    if (!data || data.length === 0) {
       return {
         success: false,
         error: 'Not in queue'
       }
     }
 
-    // Get all entries in order to calculate actual position
-    const { data: allEntries, error: entriesError } = await supabase
-      .from('queue_entries')
-      .select('id, position, status')
-      .eq('live_session_id', sessionId)
-      .in('status', ['waiting', 'your_turn', 'joined'])
-      .order('position', { ascending: true })
+    const result = data[0]
 
-    console.log('getQueuePosition DEBUG:', {
+    // Get the full entry details
+    const { data: entry, error: entryError } = await supabase
+      .from('queue_entries')
+      .select('*')
+      .eq('id', result.entry_id)
+      .single()
+
+    if (entryError || !entry) {
+      return {
+        success: false,
+        error: 'Queue entry not found'
+      }
+    }
+
+    console.log('Queue position calculated:', {
       sessionId,
       applicantId,
-      entryId: entry.id,
-      allEntriesCount: allEntries?.length || 0,
-      allEntries: allEntries?.map(e => ({ id: e.id, position: e.position, status: e.status })),
-      entriesError
-    })
-
-    // Find actual position in the ordered list
-    const entryIndex = (allEntries || []).findIndex(e => e.id === entry.id)
-    const actualPosition = entryIndex >= 0 ? entryIndex + 1 : 1
-
-    console.log('Position calculation:', {
-      entryId: entry.id,
-      entryIndex,
-      actualPosition,
-      foundInList: entryIndex >= 0
+      entryId: result.entry_id,
+      position: result.position_number,
+      totalInQueue: result.total_in_queue
     })
 
     return {
       success: true,
       entry,
-      position: actualPosition
+      position: result.position_number
     }
   } catch (error: any) {
     console.error('Error getting queue position:', error)
