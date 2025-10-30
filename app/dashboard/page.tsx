@@ -198,13 +198,24 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-8">
               {/* MYC Logo */}
               <img
                 src="/logo/new-myc.png"
                 alt="MYC"
-                className="h-12 w-auto rounded-lg"
+                className="h-12 w-auto rounded-lg cursor-pointer"
+                onClick={() => router.push('/dashboard')}
               />
+
+              {/* Navigation Links */}
+              <nav className="flex gap-6">
+                <button
+                  onClick={() => router.push('/rankings')}
+                  className="text-gray-700 hover:text-orange-500 font-medium transition-colors cursor-pointer"
+                >
+                  Rankings
+                </button>
+              </nav>
             </div>
 
             {/* Profile Dropdown */}
