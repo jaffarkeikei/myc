@@ -52,6 +52,7 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
     const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary'
 
     // Get the user email to impersonate for domain-wide delegation
+    // This should be a real user email in your workspace (e.g., no-reply@pontifi.com)
     const userEmail = process.env.GOOGLE_WORKSPACE_USER_EMAIL || calendarId
 
     // Create OAuth2 client with service account using domain-wide delegation
