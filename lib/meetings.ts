@@ -17,7 +17,7 @@ export async function generateMeetingLink(
   roasterEmail: string,
   roasterName: string,
   roastType?: string,
-  durationMinutes: number = 15
+  durationMinutes: number = 10
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   const result = await createGoogleMeetLink({
     applicantEmail,
@@ -81,7 +81,7 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
       reviewer.email || '',
       reviewer.name || 'Roaster',
       meeting.roast_type,
-      15 // 15 minutes duration
+      10 // 10 minutes duration
     )
 
     if (!meetLinkResult.success || !meetLinkResult.url) {

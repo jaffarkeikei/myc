@@ -29,10 +29,10 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
     const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS
 
     if (!credentials) {
-      console.error('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS not configured')
+      console.error('❌ GOOGLE_SERVICE_ACCOUNT_CREDENTIALS not configured in .env.local')
       return {
         success: false,
-        error: 'Google service account credentials not configured'
+        error: 'Google service account credentials not configured. Please add GOOGLE_SERVICE_ACCOUNT_CREDENTIALS to .env.local'
       }
     }
 
@@ -59,9 +59,17 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
 
     const calendar = google.calendar({ version: 'v3', auth })
 
-    // Set meeting time
+    // Set meeting time (starts now, duration from parameter)
     const startTime = new Date()
-    const endTime = new Date(startTime.getTime() + (details.durationMinutes || 10) * 60 * 1000)
+    const durationMins = details.durationMinutes || 10
+    const endTime = new Date(startTime.getTime() + durationMins * 60 * 1000)
+
+    console.log(`Creating Google Meet for ${durationMins} minutes:`, {
+      start: startTime.toISOString(),
+      end: endTime.toISOString(),
+      applicant: details.applicantEmail,
+      roaster: details.roasterEmail
+    })
 
     // Create calendar event with Google Meet
     const event = {
@@ -112,9 +120,11 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
       console.error('No Google Meet link in response:', response.data)
       return {
         success: false,
-        error: 'Failed to generate Google Meet link'
+        error: 'Failed to generate Google Meet link from Calendar API'
       }
     }
+
+    console.log('✅ Google Meet link created successfully:', meetLink)
 
     return {
       success: true,

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       reviewer.email || '',
       reviewer.name || 'Roaster',
       roastTypeLabels[meeting.roast_type] || meeting.roast_type,
-      15 // 15 minutes duration
+      10 // 10 minutes duration
     )
 
     if (!meetLinkResult.success || !meetLinkResult.url) {

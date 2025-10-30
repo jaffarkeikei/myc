@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       reviewerAny.email || '',
       reviewerAny.name || 'Roaster',
       'pitch', // Default roast type for live queue
-      15 // 15 minutes duration
+      10 // 10 minutes duration
     )
 
     if (!meetLinkResult.success || !meetLinkResult.url) {
