@@ -42,21 +42,10 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   const handleAccept = async (meetingId: string) => {
     setLoading(meetingId)
     try {
-      // Generate a meeting link with Jitsi Meet configured to bypass moderation
+      // Generate a meeting link with 8x8.vc (Jitsi's optimized service)
+      // First person to join becomes moderator automatically
       const roomName = `myc-roast-${meetingId.slice(0, 8)}`
-      const config = [
-        'config.prejoinPageEnabled=false',
-        'config.requireDisplayName=false',
-        'config.enableWelcomePage=false',
-        'config.disableModeratorIndicator=true',
-        'config.startWithAudioMuted=false',
-        'config.startWithVideoMuted=false',
-        'config.enableLobbyChat=false',
-        'config.hideConferenceSubject=true',
-        'config.hideConferenceTimer=false',
-        'config.disableInviteFunctions=true'
-      ].join('&')
-      const meetingLink = `https://meet.jit.si/${roomName}#${config}`
+      const meetingLink = `https://8x8.vc/${roomName}`
 
       await onUpdateMeeting(meetingId, {
         status: 'accepted',

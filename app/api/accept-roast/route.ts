@@ -3,13 +3,17 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sendRoastConfirmationEmails } from '@/lib/email'
 
 /**
- * Generate a unique meeting link using Jitsi Meet
- * Jitsi is free, open-source, and works reliably without API setup
+ * Generate a unique meeting link using Jitsi Meet (via 8x8.vc)
+ * 8x8.vc is Jitsi's streamlined service with better defaults
+ * First person to join becomes the host automatically
  */
 function generateMeetingLink(): string {
   // Generate a unique room name
   const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
-  return `https://meet.jit.si/myc-roast-${uniqueId}`
+  const roomName = `myc-roast-${uniqueId}`
+
+  // Using 8x8.vc (Jitsi's optimized service) which has better auto-moderation
+  return `https://8x8.vc/${roomName}`
 }
 
 export async function POST(request: NextRequest) {

@@ -6,30 +6,18 @@ import { addToRequestHistory, incrementRequestCount } from './matching'
 type Meeting = Database['public']['Tables']['meetings']['Row']
 
 /**
- * Generate a unique meeting link using Jitsi Meet
- * Jitsi is free, open-source, and works reliably without API setup
- * Configured to bypass moderation and allow direct joining
+ * Generate a unique meeting link using Jitsi Meet (via 8x8.vc)
+ * 8x8.vc is Jitsi's streamlined service with better defaults
+ * First person to join becomes the host automatically
  */
 export function generateMeetingLink(): string {
   // Generate a unique room name
   const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
   const roomName = `myc-roast-${uniqueId}`
 
-  // Add configuration parameters to bypass lobby, moderation, and pre-join screens
-  const config = [
-    'config.prejoinPageEnabled=false',           // Skip pre-join page
-    'config.requireDisplayName=false',           // Don't require display name
-    'config.enableWelcomePage=false',            // Disable welcome page
-    'config.disableModeratorIndicator=true',     // No moderator badge
-    'config.startWithAudioMuted=false',          // Start with audio on
-    'config.startWithVideoMuted=false',          // Start with video on
-    'config.enableLobbyChat=false',              // Disable lobby
-    'config.hideConferenceSubject=true',         // Hide room subject
-    'config.hideConferenceTimer=false',          // Show timer
-    'config.disableInviteFunctions=true'         // Disable invite functions
-  ].join('&')
-
-  return `https://meet.jit.si/${roomName}#${config}`
+  // Using 8x8.vc (Jitsi's optimized service) which has better auto-moderation
+  // First person to join automatically becomes moderator and starts the meeting
+  return `https://8x8.vc/${roomName}`
 }
 
 /**
