@@ -178,6 +178,20 @@ export async function completeMeeting(meetingId: string) {
   const supabase = createClient()
 
   try {
+    // Get meeting details to find both parties
+    const meetingResult = await supabase
+      .from('meetings')
+      .select('reviewer_id, applicant_id')
+      .eq('id', meetingId)
+      .single()
+
+    const meeting = meetingResult.data as any
+
+    if (meetingResult.error || !meeting) {
+      throw new Error('Meeting not found')
+    }
+
+    // Update meeting status to completed
     const { error } = await (supabase as any)
       .from('meetings')
       .update({
@@ -190,21 +204,37 @@ export async function completeMeeting(meetingId: string) {
       throw error
     }
 
-    // Increment roaster's roast count
-    const meetingResult = await supabase
-      .from('meetings')
-      .select('reviewer_id')
-      .eq('id', meetingId)
+    // Increment roast count for both the reviewer and the applicant
+    // Get current counts
+    const reviewerResult = await supabase
+      .from('profiles')
+      .select('roast_count')
+      .eq('id', meeting.reviewer_id)
       .single()
 
-    const meeting = meetingResult.data as any
+    const applicantResult = await supabase
+      .from('profiles')
+      .select('roast_count')
+      .eq('id', meeting.applicant_id)
+      .single()
 
-    if (meeting) {
-      await supabase.rpc('increment', {
-        row_id: meeting.reviewer_id,
-        table_name: 'profiles',
-        column_name: 'roast_count'
-      } as any)
+    const reviewerData = reviewerResult.data as any
+    const applicantData = applicantResult.data as any
+
+    // Update reviewer roast count
+    if (reviewerData) {
+      await (supabase as any)
+        .from('profiles')
+        .update({ roast_count: (reviewerData.roast_count || 0) + 1 })
+        .eq('id', meeting.reviewer_id)
+    }
+
+    // Update applicant roast count
+    if (applicantData) {
+      await (supabase as any)
+        .from('profiles')
+        .update({ roast_count: (applicantData.roast_count || 0) + 1 })
+        .eq('id', meeting.applicant_id)
     }
 
     return { success: true }
