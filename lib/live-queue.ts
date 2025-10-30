@@ -503,20 +503,37 @@ export async function getQueuePosition(sessionId: string, applicantId: string) {
     }
 
     // Get all entries in order to calculate actual position
-    const { data: allEntries } = await supabase
+    const { data: allEntries, error: entriesError } = await supabase
       .from('queue_entries')
-      .select('id, position')
+      .select('id, position, status')
       .eq('live_session_id', sessionId)
       .in('status', ['waiting', 'your_turn', 'joined'])
       .order('position', { ascending: true })
 
+    console.log('getQueuePosition DEBUG:', {
+      sessionId,
+      applicantId,
+      entryId: entry.id,
+      allEntriesCount: allEntries?.length || 0,
+      allEntries: allEntries?.map(e => ({ id: e.id, position: e.position, status: e.status })),
+      entriesError
+    })
+
     // Find actual position in the ordered list
-    const actualPosition = (allEntries || []).findIndex(e => e.id === entry.id) + 1
+    const entryIndex = (allEntries || []).findIndex(e => e.id === entry.id)
+    const actualPosition = entryIndex >= 0 ? entryIndex + 1 : 1
+
+    console.log('Position calculation:', {
+      entryId: entry.id,
+      entryIndex,
+      actualPosition,
+      foundInList: entryIndex >= 0
+    })
 
     return {
       success: true,
       entry,
-      position: actualPosition || 1
+      position: actualPosition
     }
   } catch (error: any) {
     console.error('Error getting queue position:', error)
