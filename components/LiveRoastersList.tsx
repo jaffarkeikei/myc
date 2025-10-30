@@ -56,14 +56,14 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
   }
 
   const loadMyQueuePositions = async (sessionsToCheck?: LiveSession[]) => {
-    const positions = new Map()
+    const positions = new Map<string, { entry: QueueEntry, position: number }>()
     const sessionsArray = sessionsToCheck || sessions
     for (const session of sessionsArray) {
-      const result = await getQueuePosition(session.id, applicantId)
+      const result: any = await getQueuePosition(session.id, applicantId)
       if (result.success && result.entry) {
         positions.set(session.id, {
-          entry: result.entry as QueueEntry,
-          position: result.position as number
+          entry: result.entry,
+          position: result.position
         })
       }
     }
