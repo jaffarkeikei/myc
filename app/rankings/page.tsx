@@ -174,7 +174,7 @@ export default function RankingsPage() {
         <div className="mt-6">
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            className="text-gray-600 hover:text-gray-900 font-medium transition-colors cursor-pointer"
           >
             ← Back to Dashboard
           </button>
