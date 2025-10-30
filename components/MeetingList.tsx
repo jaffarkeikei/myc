@@ -17,6 +17,24 @@ interface MeetingListProps {
   onUpdateMeeting: (meetingId: string, updates: any) => Promise<void>
 }
 
+// Helper function to format timestamps
+function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+
+  // For older dates, show the actual date
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export default function MeetingList({ meetings, currentUserId, userRole, onUpdateMeeting }: MeetingListProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [feedbackModal, setFeedbackModal] = useState<{ meetingId: string; otherUserName: string } | null>(null)
@@ -99,15 +117,25 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
             }`}
           >
             <div className="flex justify-between items-start mb-3">
-              <div>
+              <div className="flex-1">
                 <h4 className="font-medium text-gray-900">
                   {userRole === 'applicant' ? 'Roaster' : 'Applicant'}: {otherUser?.name}
                 </h4>
                 {otherUser?.company && (
                   <p className="text-sm text-gray-600">{otherUser.company}</p>
                 )}
+                {/* Timestamp */}
+                <p className="text-xs text-gray-500 mt-1">
+                  {meeting.status === 'completed' && meeting.completed_at
+                    ? `Completed ${formatTimestamp(meeting.completed_at)}`
+                    : meeting.status === 'accepted' && meeting.accepted_at
+                    ? `Accepted ${formatTimestamp(meeting.accepted_at)}`
+                    : meeting.requested_at
+                    ? `Requested ${formatTimestamp(meeting.requested_at)}`
+                    : ''}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-sm text-gray-600">
                   {ROAST_TYPES[meeting.roast_type as keyof typeof ROAST_TYPES]?.label}
                 </span>

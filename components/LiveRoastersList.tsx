@@ -28,17 +28,28 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
   }, [])
 
   useEffect(() => {
-    // Subscribe to queue entry changes
+    // Subscribe to ALL queue entry changes (not just for this applicant)
+    // This ensures we update positions when anyone joins/leaves any queue
     const supabase = createClient()
     const channel = supabase
       .channel('queue-updates')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'queue_entries',
-        filter: `applicant_id=eq.${applicantId}`
-      }, () => {
+        table: 'queue_entries'
+      }, (payload) => {
+        console.log('Queue entry changed:', payload)
+        // Reload queue positions for all sessions whenever ANY change happens
         loadMyQueuePositions()
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'live_sessions'
+      }, (payload) => {
+        console.log('Live session changed:', payload)
+        // Reload all sessions and queue positions when session status changes
+        loadLiveSessions()
       })
       .subscribe()
 
