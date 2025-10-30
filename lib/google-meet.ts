@@ -51,10 +51,20 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
     // Get the calendar ID (can be 'primary' or a specific calendar ID)
     const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary'
 
-    // Create OAuth2 client with service account
+    // Get the user email to impersonate for domain-wide delegation
+    const userEmail = process.env.GOOGLE_WORKSPACE_USER_EMAIL || calendarId
+
+    // Create OAuth2 client with service account using domain-wide delegation
     const auth = new google.auth.GoogleAuth({
       credentials: parsedCredentials,
-      scopes: ['https://www.googleapis.com/auth/calendar']
+      scopes: [
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events'
+      ],
+      // IMPORTANT: This tells the service account to impersonate a user in your domain
+      clientOptions: {
+        subject: userEmail
+      }
     })
 
     const calendar = google.calendar({ version: 'v3', auth })
@@ -72,6 +82,8 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
     })
 
     // Create calendar event with Google Meet
+    // Note: We don't add attendees to avoid needing Domain-Wide Delegation
+    // The Meet link will be shared through our application instead
     const event = {
       summary: `MYC Roast: ${details.applicantName} x ${details.roasterName}`,
       description: `Roast session${details.roastType ? ` for ${details.roastType}` : ''}\n\nApplicant: ${details.applicantName}\nRoaster: ${details.roasterName}`,
@@ -83,26 +95,13 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
         dateTime: endTime.toISOString(),
         timeZone: 'UTC'
       },
-      attendees: [
-        { email: details.applicantEmail, displayName: details.applicantName },
-        { email: details.roasterEmail, displayName: details.roasterName }
-      ],
       conferenceData: {
         createRequest: {
-          requestId: `myc-roast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          requestId: Math.random().toString(36).substring(2, 15),
           conferenceSolutionKey: {
             type: 'hangoutsMeet'
           }
         }
-      },
-      guestsCanModify: false,
-      guestsCanInviteOthers: false,
-      guestsCanSeeOtherGuests: true,
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'popup', minutes: 5 }
-        ]
       }
     }
 
@@ -133,6 +132,10 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
     }
   } catch (error: any) {
     console.error('Error creating Google Meet link:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
+    if (error.response?.data) {
+      console.error('API response data:', JSON.stringify(error.response.data, null, 2))
+    }
 
     // Provide more specific error messages
     if (error.code === 403) {
@@ -146,6 +149,13 @@ export async function createGoogleMeetLink(details: MeetingDetails): Promise<{
       return {
         success: false,
         error: 'Calendar not found. Check GOOGLE_CALENDAR_ID.'
+      }
+    }
+
+    if (error.code === 400) {
+      return {
+        success: false,
+        error: `Bad request: ${error.message}. Check error logs for details.`
       }
     }
 
