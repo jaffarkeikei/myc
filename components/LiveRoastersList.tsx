@@ -5,6 +5,7 @@ import { Database } from '@/lib/database.types'
 import { getActiveLiveRoasters, joinQueue, getQueuePosition, confirmJoining } from '@/lib/live-queue'
 import { createClient } from '@/lib/supabase'
 import FeedbackModal from './FeedbackModal'
+import MeetingTimer from './MeetingTimer'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row'] & {
   reviewer?: Database['public']['Tables']['profiles']['Row']
@@ -247,10 +248,19 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
                 )}
 
                 {hasJoined && queueInfo?.entry.meeting_id && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 mb-3 text-center">You're in session</p>
-                    <div className="space-y-2">
-                      <button
+                  <div className="space-y-2">
+                    {/* Meeting Timer */}
+                    {queueInfo.entry.joined_at && (
+                      <MeetingTimer
+                        startTime={queueInfo.entry.joined_at}
+                        durationMinutes={10}
+                      />
+                    )}
+
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-3 text-center">You're in session</p>
+                      <div className="space-y-2">
+                        <button
                         onClick={async () => {
                           // Get meeting link from meeting_id
                           const supabase = createClient()
@@ -275,6 +285,7 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
                       >
                         Complete & Give Feedback
                       </button>
+                      </div>
                     </div>
                   </div>
                 )}

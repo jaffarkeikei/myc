@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Database } from '@/lib/database.types'
 import { goLive, endLiveSession, getCurrentLiveSession, getSessionQueue, skipQueueEntry, completeQueueEntry } from '@/lib/live-queue'
 import FeedbackModal from './FeedbackModal'
+import MeetingTimer from './MeetingTimer'
 import { createClient } from '@/lib/supabase'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row']
@@ -294,11 +295,20 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
 
       {/* Current Session */}
       {currentEntry && (
-        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-orange-900">Current Session</p>
-              <p className="text-lg font-semibold">{(currentEntry.applicant as any)?.name || 'Unknown'}</p>
+        <div className="mb-4 space-y-3">
+          {/* Meeting Timer - show when session is active */}
+          {currentEntry.status === 'joined' && (currentEntry as any).meeting && (
+            <MeetingTimer
+              startTime={(currentEntry as any).meeting.scheduled_for || (currentEntry as any).meeting.accepted_at || new Date().toISOString()}
+              durationMinutes={10}
+            />
+          )}
+
+          <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-orange-900">Current Session</p>
+                <p className="text-lg font-semibold">{(currentEntry.applicant as any)?.name || 'Unknown'}</p>
               {currentEntry.status === 'your_turn' && (currentEntry as any).meeting?.meeting_link && (
                 <div className="mt-2">
                   <a
@@ -353,6 +363,7 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 

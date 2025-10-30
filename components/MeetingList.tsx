@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ROAST_TYPES } from '@/lib/constants'
 import { Database } from '@/lib/database.types'
 import FeedbackModal from './FeedbackModal'
+import MeetingTimer from './MeetingTimer'
 
 type Meeting = Database['public']['Tables']['meetings']['Row'] & {
   applicant?: Database['public']['Tables']['profiles']['Row']
@@ -194,18 +195,29 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
 
             {/* Show meeting link only for accepted (active) meetings, not completed */}
             {meeting.status === 'accepted' && meeting.meeting_link && (
-              <div className="mb-3 p-3 bg-green-100 rounded-lg">
-                <p className="text-sm font-medium text-green-800 mb-1">
-                  Your roast is ready!
-                </p>
-                <a
-                  href={meeting.meeting_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-green-700 underline hover:no-underline"
-                >
-                  Join the 10-minute session now →
-                </a>
+              <div className="mb-3 space-y-2">
+                {/* Meeting Timer */}
+                {(meeting.scheduled_for || meeting.accepted_at) && (
+                  <MeetingTimer
+                    startTime={meeting.scheduled_for || meeting.accepted_at!}
+                    durationMinutes={10}
+                  />
+                )}
+
+                {/* Meeting Link */}
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <p className="text-sm font-medium text-green-800 mb-1">
+                    Your roast is ready!
+                  </p>
+                  <a
+                    href={meeting.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-green-700 underline hover:no-underline"
+                  >
+                    Join the 10-minute session now →
+                  </a>
+                </div>
               </div>
             )}
 

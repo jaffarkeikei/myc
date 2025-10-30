@@ -99,7 +99,8 @@ export async function acceptRoastRequest(meetingId: string, roasterId: string) {
         status: 'accepted',
         meeting_link: meetLink,
         accepted_at: now.toISOString(),
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        scheduled_for: now.toISOString() // Set the meeting start time
       })
       .eq('id', meetingId)
 
