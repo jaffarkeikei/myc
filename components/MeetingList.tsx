@@ -35,6 +35,19 @@ function formatTimestamp(timestamp: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// Helper function to format exact date and time
+function formatExactTime(timestamp: string): string {
+  const date = new Date(timestamp)
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
 export default function MeetingList({ meetings, currentUserId, userRole, onUpdateMeeting }: MeetingListProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [feedbackModal, setFeedbackModal] = useState<{ meetingId: string; otherUserName: string } | null>(null)
@@ -122,15 +135,20 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
                   <p className="text-sm text-gray-600">{otherUser.company}</p>
                 )}
                 {/* Timestamp */}
-                <p className="text-xs text-gray-500 mt-1">
-                  {meeting.status === 'completed' && meeting.completed_at
-                    ? `Completed ${formatTimestamp(meeting.completed_at)}`
-                    : meeting.status === 'accepted' && meeting.accepted_at
-                    ? `Accepted ${formatTimestamp(meeting.accepted_at)}`
-                    : meeting.requested_at
-                    ? `Requested ${formatTimestamp(meeting.requested_at)}`
-                    : ''}
-                </p>
+                {meeting.status === 'completed' && meeting.accepted_at && meeting.completed_at ? (
+                  <div className="text-xs text-gray-500 mt-1">
+                    <div>Started: {formatExactTime(meeting.accepted_at)}</div>
+                    <div>Ended: {formatExactTime(meeting.completed_at)}</div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {meeting.status === 'accepted' && meeting.accepted_at
+                      ? `Accepted ${formatTimestamp(meeting.accepted_at)}`
+                      : meeting.requested_at
+                      ? `Requested ${formatTimestamp(meeting.requested_at)}`
+                      : ''}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-sm text-gray-600">
@@ -147,18 +165,33 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
               </div>
             </div>
 
-            {meeting.status === 'accepted' && meeting.meeting_link && (
-              <div className="mb-3 p-3 bg-green-100 rounded-lg">
-                <p className="text-sm font-medium text-green-800 mb-1">
-                  Your roast is ready!
+            {/* Show meeting link for accepted and completed meetings */}
+            {(meeting.status === 'accepted' || meeting.status === 'completed') && meeting.meeting_link && (
+              <div className={`mb-3 p-3 rounded-lg ${
+                meeting.status === 'accepted'
+                  ? 'bg-green-100'
+                  : 'bg-blue-50'
+              }`}>
+                <p className={`text-sm font-medium mb-1 ${
+                  meeting.status === 'accepted'
+                    ? 'text-green-800'
+                    : 'text-blue-800'
+                }`}>
+                  {meeting.status === 'accepted' ? 'Your roast is ready!' : 'Meeting Link'}
                 </p>
                 <a
                   href={meeting.meeting_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-green-700 underline hover:no-underline"
+                  className={`text-sm underline hover:no-underline ${
+                    meeting.status === 'accepted'
+                      ? 'text-green-700'
+                      : 'text-blue-700'
+                  }`}
                 >
-                  Join the 10-minute session now →
+                  {meeting.status === 'accepted'
+                    ? 'Join the 10-minute session now →'
+                    : 'View meeting link →'}
                 </a>
               </div>
             )}
