@@ -248,7 +248,7 @@ export default function DashboardPage() {
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
-            {currentUser.role === 'applicant' ? 'Roast History' : 'All Roast Requests'}
+            Roast History
             {currentUser.role === 'applicant' && meetings.filter(m => m.status === 'requested').length > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
                 {meetings.filter(m => m.status === 'requested').length}
@@ -271,9 +271,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold mb-4">
-              {currentUser.role === 'applicant' ? 'Roast History' : 'All Roast Requests'}
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">Roast History</h2>
             <MeetingList
               meetings={currentUser.role === 'applicant' ? meetings.filter(m => m.status === 'completed') : meetings}
               currentUserId={currentUser.id}
