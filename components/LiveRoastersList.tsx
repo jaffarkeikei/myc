@@ -207,9 +207,28 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
                   </div>
                 )}
 
-                {hasJoined && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                    <p className="text-sm font-medium text-blue-900">You're in session</p>
+                {hasJoined && queueInfo?.entry.meeting_id && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm font-medium text-blue-900 mb-3 text-center">You're in session</p>
+                    <button
+                      onClick={async () => {
+                        // Get meeting link from meeting_id
+                        const supabase = createClient()
+                        const { data: meeting } = await supabase
+                          .from('meetings')
+                          .select('meeting_link')
+                          .eq('id', queueInfo.entry.meeting_id!)
+                          .single()
+
+                        const meetingData = meeting as { meeting_link: string | null } | null
+                        if (meetingData?.meeting_link) {
+                          window.open(meetingData.meeting_link, '_blank')
+                        }
+                      }}
+                      className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+                    >
+                      Open Meeting Link →
+                    </button>
                   </div>
                 )}
 

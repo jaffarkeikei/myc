@@ -165,33 +165,19 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
               </div>
             </div>
 
-            {/* Show meeting link for accepted and completed meetings */}
-            {(meeting.status === 'accepted' || meeting.status === 'completed') && meeting.meeting_link && (
-              <div className={`mb-3 p-3 rounded-lg ${
-                meeting.status === 'accepted'
-                  ? 'bg-green-100'
-                  : 'bg-blue-50'
-              }`}>
-                <p className={`text-sm font-medium mb-1 ${
-                  meeting.status === 'accepted'
-                    ? 'text-green-800'
-                    : 'text-blue-800'
-                }`}>
-                  {meeting.status === 'accepted' ? 'Your roast is ready!' : 'Meeting Link'}
+            {/* Show meeting link only for accepted (active) meetings, not completed */}
+            {meeting.status === 'accepted' && meeting.meeting_link && (
+              <div className="mb-3 p-3 bg-green-100 rounded-lg">
+                <p className="text-sm font-medium text-green-800 mb-1">
+                  Your roast is ready!
                 </p>
                 <a
                   href={meeting.meeting_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`text-sm underline hover:no-underline ${
-                    meeting.status === 'accepted'
-                      ? 'text-green-700'
-                      : 'text-blue-700'
-                  }`}
+                  className="text-sm text-green-700 underline hover:no-underline"
                 >
-                  {meeting.status === 'accepted'
-                    ? 'Join the 10-minute session now →'
-                    : 'View meeting link →'}
+                  Join the 10-minute session now →
                 </a>
               </div>
             )}
