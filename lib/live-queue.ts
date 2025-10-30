@@ -1,6 +1,7 @@
 // @ts-nocheck - Type issues with new live_sessions and queue_entries tables
 import { createClient } from './supabase'
 import { Database } from './database.types'
+import { sendLiveSessionNotification } from './email'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row']
 type QueueEntry = Database['public']['Tables']['queue_entries']['Row']
@@ -30,6 +31,13 @@ export async function goLive(reviewerId: string, durationMinutes: number) {
       }
     }
 
+    // Get reviewer profile information for email notification
+    const { data: reviewer } = await supabase
+      .from('profiles')
+      .select('name, email, company, yc_batch, industry')
+      .eq('id', reviewerId)
+      .single()
+
     // Create new live session
     const now = new Date()
     const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000)
@@ -49,6 +57,21 @@ export async function goLive(reviewerId: string, durationMinutes: number) {
 
     if (error) {
       throw error
+    }
+
+    // Send email notification to MYC team (don't block on email failure)
+    if (reviewer) {
+      sendLiveSessionNotification(
+        reviewer.name || 'Unknown',
+        reviewer.email || '',
+        reviewer.company,
+        reviewer.yc_batch,
+        durationMinutes,
+        reviewer.industry
+      ).catch(err => {
+        console.error('Failed to send live session notification email:', err)
+        // Don't fail the session if email fails
+      })
     }
 
     return {

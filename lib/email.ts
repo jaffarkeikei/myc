@@ -285,3 +285,183 @@ export async function sendNewRequestNotification(
     return { success: false, error }
   }
 }
+
+/**
+ * Send notification to MYC team when an alumni goes live
+ * This allows the team to promote the live session
+ */
+export async function sendLiveSessionNotification(
+  reviewerName: string,
+  reviewerEmail: string,
+  reviewerCompany: string | null,
+  reviewerYCBatch: string | null,
+  durationMinutes: number,
+  industry: string | null
+) {
+  try {
+    const client = getResendClient()
+
+    const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000)
+    const endsAtFormatted = endsAt.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/Los_Angeles'
+    })
+
+    await client.emails.send({
+      from: 'MYC Alerts <hello@myc-roast.com>',
+      to: 'hello@myc-roast.com',
+      subject: `🔴 LIVE NOW: ${reviewerName} is roasting!`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.6;
+                color: #1A1A1A;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              .header {
+                color: #FF6600;
+                font-size: 28px;
+                font-weight: bold;
+                margin-bottom: 20px;
+              }
+              .live-badge {
+                display: inline-block;
+                background: #DC2626;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-weight: bold;
+                margin-bottom: 20px;
+                animation: pulse 2s infinite;
+              }
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+              }
+              .reviewer-info {
+                background: #F5F5F5;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid #FF6600;
+              }
+              .info-row {
+                margin: 10px 0;
+              }
+              .label {
+                font-weight: 600;
+                color: #666;
+                display: inline-block;
+                width: 120px;
+              }
+              .value {
+                color: #1A1A1A;
+                font-weight: 500;
+              }
+              .cta {
+                background: #FF6600;
+                color: white;
+                padding: 15px 30px;
+                text-align: center;
+                border-radius: 8px;
+                margin: 25px 0;
+                font-weight: 600;
+                font-size: 16px;
+              }
+              .footer {
+                color: #666666;
+                font-size: 14px;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #E5E5E5;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">MYC</div>
+
+            <div class="live-badge">🔴 LIVE NOW</div>
+
+            <p style="font-size: 18px; font-weight: 600; margin: 20px 0;">
+              ${reviewerName} just went live and is ready to roast!
+            </p>
+
+            <div class="reviewer-info">
+              <div class="info-row">
+                <span class="label">Name:</span>
+                <span class="value">${reviewerName}</span>
+              </div>
+              ${reviewerYCBatch ? `
+              <div class="info-row">
+                <span class="label">YC Batch:</span>
+                <span class="value">${reviewerYCBatch}</span>
+              </div>
+              ` : ''}
+              ${reviewerCompany ? `
+              <div class="info-row">
+                <span class="label">Company:</span>
+                <span class="value">${reviewerCompany}</span>
+              </div>
+              ` : ''}
+              ${industry ? `
+              <div class="info-row">
+                <span class="label">Industry:</span>
+                <span class="value">${industry}</span>
+              </div>
+              ` : ''}
+              <div class="info-row">
+                <span class="label">Email:</span>
+                <span class="value">${reviewerEmail}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Session ends:</span>
+                <span class="value">${endsAtFormatted} PT</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Duration:</span>
+                <span class="value">${durationMinutes} minutes</span>
+              </div>
+            </div>
+
+            <div class="cta">
+              🚀 Time to promote this live session!
+            </div>
+
+            <p style="color: #666; font-size: 14px;">
+              Consider promoting on:
+            </p>
+            <ul style="color: #666; font-size: 14px;">
+              <li>Twitter/X</li>
+              <li>YC Slack channels</li>
+              <li>Email newsletter</li>
+            </ul>
+
+            <div class="footer">
+              <p>This is an automated notification when alumni go live on MYC.</p>
+              <p style="margin-top: 10px;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://myc-roast.com'}/dashboard" style="color: #FF6600; text-decoration: none;">
+                  View Dashboard →
+                </a>
+              </p>
+            </div>
+          </body>
+        </html>
+      `
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error sending live session notification:', error)
+    // Don't fail the live session if email fails
+    return { success: false, error }
+  }
+}
