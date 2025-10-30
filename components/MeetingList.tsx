@@ -135,9 +135,10 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
                   <p className="text-sm text-gray-600">{otherUser.company}</p>
                 )}
                 {/* Timestamp */}
-                {meeting.status === 'completed' && meeting.accepted_at && meeting.completed_at ? (
+                {meeting.status === 'completed' && meeting.completed_at ? (
                   <div className="text-xs text-gray-500 mt-1">
-                    <div>Started: {formatExactTime(meeting.accepted_at)}</div>
+                    {/* Use scheduled_for if available (live queue), otherwise use accepted_at */}
+                    <div>Started: {formatExactTime(meeting.scheduled_for || meeting.accepted_at || meeting.completed_at)}</div>
                     <div>Ended: {formatExactTime(meeting.completed_at)}</div>
                   </div>
                 ) : (
