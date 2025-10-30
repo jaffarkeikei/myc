@@ -9,7 +9,6 @@ import LiveSessionControl from '@/components/LiveSessionControl'
 import LiveRoastersList from '@/components/LiveRoastersList'
 import { Database } from '@/lib/database.types'
 import { COLORS } from '@/lib/constants'
-import { completeMeeting } from '@/lib/meetings'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 type Meeting = Database['public']['Tables']['meetings']['Row'] & {
@@ -153,12 +152,26 @@ export default function DashboardPage() {
           setTimeout(() => setSuccessMessage(null), 5000)
         }
       } else if (updates.status === 'completed') {
-        const result = await completeMeeting(meetingId)
+        // Use API route for completion flow
+        const response = await fetch('/api/complete-meeting', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            meetingId
+          }),
+        })
 
-        if (result.success) {
+        const result = await response.json()
+
+        if (response.ok && result.success) {
           setSuccessMessage('Meeting completed!')
           await loadMeetings()
           setTimeout(() => setSuccessMessage(null), 3000)
+        } else {
+          setSuccessMessage(`Error: ${result.error}`)
+          setTimeout(() => setSuccessMessage(null), 5000)
         }
       } else {
         // Regular update
