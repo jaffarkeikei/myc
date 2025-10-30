@@ -42,10 +42,9 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   const handleAccept = async (meetingId: string) => {
     setLoading(meetingId)
     try {
-      // Generate a meeting link with 8x8.vc (Jitsi's optimized service)
-      // First person to join becomes moderator automatically
+      // Generate a meeting link with Talky.io - truly instant, no moderation
       const roomName = `myc-roast-${meetingId.slice(0, 8)}`
-      const meetingLink = `https://8x8.vc/${roomName}`
+      const meetingLink = `https://talky.io/${roomName}`
 
       await onUpdateMeeting(meetingId, {
         status: 'accepted',

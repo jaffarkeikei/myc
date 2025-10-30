@@ -3,17 +3,17 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sendRoastConfirmationEmails } from '@/lib/email'
 
 /**
- * Generate a unique meeting link using Jitsi Meet (via 8x8.vc)
- * 8x8.vc is Jitsi's streamlined service with better defaults
- * First person to join becomes the host automatically
+ * Generate a unique meeting link using Talky.io
+ * Talky.io is completely free, instant, and requires no moderation or login
+ * Both participants can join directly and start the meeting immediately
  */
 function generateMeetingLink(): string {
   // Generate a unique room name
   const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
   const roomName = `myc-roast-${uniqueId}`
 
-  // Using 8x8.vc (Jitsi's optimized service) which has better auto-moderation
-  return `https://8x8.vc/${roomName}`
+  // Talky.io format: https://talky.io/room-name
+  return `https://talky.io/${roomName}`
 }
 
 export async function POST(request: NextRequest) {
