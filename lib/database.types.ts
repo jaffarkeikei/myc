@@ -75,6 +75,12 @@ export interface Database {
           meeting_link: string | null
           notes: string | null
           feedback_helpful: boolean | null
+          applicant_completed: boolean
+          reviewer_completed: boolean
+          applicant_feedback_helpful: boolean | null
+          applicant_notes: string | null
+          reviewer_feedback_helpful: boolean | null
+          reviewer_notes: string | null
           requested_at: string
           accepted_at: string | null
           expires_at: string | null
@@ -90,6 +96,12 @@ export interface Database {
           meeting_link?: string | null
           notes?: string | null
           feedback_helpful?: boolean | null
+          applicant_completed?: boolean
+          reviewer_completed?: boolean
+          applicant_feedback_helpful?: boolean | null
+          applicant_notes?: string | null
+          reviewer_feedback_helpful?: boolean | null
+          reviewer_notes?: string | null
           requested_at?: string
           accepted_at?: string | null
           expires_at?: string | null
@@ -105,6 +117,12 @@ export interface Database {
           meeting_link?: string | null
           notes?: string | null
           feedback_helpful?: boolean | null
+          applicant_completed?: boolean
+          reviewer_completed?: boolean
+          applicant_feedback_helpful?: boolean | null
+          applicant_notes?: string | null
+          reviewer_feedback_helpful?: boolean | null
+          reviewer_notes?: string | null
           requested_at?: string
           accepted_at?: string | null
           expires_at?: string | null

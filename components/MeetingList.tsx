@@ -69,11 +69,7 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   const handleComplete = async (meeting: Meeting) => {
     setLoading(meeting.id)
     try {
-      await onUpdateMeeting(meeting.id, {
-        status: 'completed',
-        completed_at: new Date().toISOString()
-      })
-      // Show feedback modal
+      // Show feedback modal first
       const otherUser = userRole === 'applicant' ? meeting.reviewer : meeting.applicant
       setFeedbackModal({
         meetingId: meeting.id,
@@ -87,11 +83,41 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
   }
 
   const handleFeedbackSubmit = async (meetingId: string, helpful: boolean, notes?: string) => {
-    await onUpdateMeeting(meetingId, {
-      feedback_helpful: helpful,
-      notes: notes
-    })
-    setFeedbackModal(null)
+    try {
+      // Determine which side is completing
+      const isApplicant = userRole === 'applicant'
+      const isReviewer = userRole === 'reviewer'
+
+      // Prepare updates based on role
+      const updates: any = {}
+
+      if (isApplicant) {
+        updates.applicant_completed = true
+        updates.applicant_feedback_helpful = helpful
+        updates.applicant_notes = notes
+      } else if (isReviewer) {
+        updates.reviewer_completed = true
+        updates.reviewer_feedback_helpful = helpful
+        updates.reviewer_notes = notes
+      }
+
+      // First, update the meeting with the user's feedback and completion
+      await onUpdateMeeting(meetingId, updates)
+
+      // Then call the complete-meeting API to check if both parties completed
+      // and increment roast counts if needed
+      await fetch('/api/complete-meeting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ meetingId }),
+      })
+
+      setFeedbackModal(null)
+    } catch (error) {
+      console.error('Error submitting feedback:', error)
+    }
   }
 
   const handleCancel = async (meetingId: string) => {
@@ -203,15 +229,30 @@ export default function MeetingList({ meetings, currentUserId, userRole, onUpdat
                 </>
               )}
 
-              {meeting.status === 'accepted' && (
-                <button
-                  onClick={() => handleComplete(meeting)}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
-                >
-                  {isLoading ? 'Processing...' : 'Mark as Complete'}
-                </button>
-              )}
+              {meeting.status === 'accepted' && (() => {
+                const currentUserCompleted = userRole === 'applicant' ? meeting.applicant_completed : meeting.reviewer_completed
+                const otherUserCompleted = userRole === 'applicant' ? meeting.reviewer_completed : meeting.applicant_completed
+                const otherUserRole = userRole === 'applicant' ? 'roaster' : 'applicant'
+
+                if (currentUserCompleted && !otherUserCompleted) {
+                  return (
+                    <div className="px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg">
+                      Waiting for {otherUserRole} to complete
+                    </div>
+                  )
+                } else if (!currentUserCompleted) {
+                  return (
+                    <button
+                      onClick={() => handleComplete(meeting)}
+                      disabled={isLoading}
+                      className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                    >
+                      {isLoading ? 'Processing...' : 'Mark as Complete'}
+                    </button>
+                  )
+                }
+                return null
+              })()}
 
               {userRole === 'applicant' && meeting.status === 'requested' && (
                 <button

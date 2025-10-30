@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Database } from '@/lib/database.types'
 import { getActiveLiveRoasters, joinQueue, getQueuePosition, confirmJoining } from '@/lib/live-queue'
 import { createClient } from '@/lib/supabase'
+import FeedbackModal from './FeedbackModal'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row'] & {
   reviewer?: Database['public']['Tables']['profiles']['Row']
@@ -20,6 +21,7 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
   const [myQueue, setMyQueue] = useState<Map<string, { entry: QueueEntry, position: number }>>(new Map())
   const [error, setError] = useState<string | null>(null)
   const [joiningSession, setJoiningSession] = useState<string | null>(null)
+  const [feedbackModal, setFeedbackModal] = useState<{ meetingId: string; reviewerName: string } | null>(null)
 
   useEffect(() => {
     loadLiveSessions()
@@ -109,6 +111,43 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
       }
     } catch (err) {
       console.error('Error confirming join:', err)
+    }
+  }
+
+  const handleCompleteSession = async (meetingId: string, reviewerName: string) => {
+    // Show feedback modal
+    setFeedbackModal({ meetingId, reviewerName })
+  }
+
+  const handleFeedbackSubmit = async (meetingId: string, helpful: boolean, notes?: string) => {
+    if (!feedbackModal) return
+
+    try {
+      const supabase = createClient()
+
+      // Update the meeting with applicant's feedback
+      await (supabase as any)
+        .from('meetings')
+        .update({
+          applicant_completed: true,
+          applicant_feedback_helpful: helpful,
+          applicant_notes: notes
+        })
+        .eq('id', meetingId)
+
+      // Check if both parties completed and increment roast counts if needed
+      await fetch('/api/complete-meeting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ meetingId }),
+      })
+
+      setFeedbackModal(null)
+      await loadLiveSessions()
+    } catch (err) {
+      console.error('Error submitting feedback:', err)
     }
   }
 
@@ -210,25 +249,33 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
                 {hasJoined && queueInfo?.entry.meeting_id && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm font-medium text-blue-900 mb-3 text-center">You're in session</p>
-                    <button
-                      onClick={async () => {
-                        // Get meeting link from meeting_id
-                        const supabase = createClient()
-                        const { data: meeting } = await supabase
-                          .from('meetings')
-                          .select('meeting_link')
-                          .eq('id', queueInfo.entry.meeting_id!)
-                          .single()
+                    <div className="space-y-2">
+                      <button
+                        onClick={async () => {
+                          // Get meeting link from meeting_id
+                          const supabase = createClient()
+                          const { data: meeting } = await supabase
+                            .from('meetings')
+                            .select('meeting_link')
+                            .eq('id', queueInfo.entry.meeting_id!)
+                            .single()
 
-                        const meetingData = meeting as { meeting_link: string | null } | null
-                        if (meetingData?.meeting_link) {
-                          window.open(meetingData.meeting_link, '_blank')
-                        }
-                      }}
-                      className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
-                    >
-                      Open Meeting Link →
-                    </button>
+                          const meetingData = meeting as { meeting_link: string | null } | null
+                          if (meetingData?.meeting_link) {
+                            window.open(meetingData.meeting_link, '_blank')
+                          }
+                        }}
+                        className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+                      >
+                        Open Meeting Link →
+                      </button>
+                      <button
+                        onClick={() => handleCompleteSession(queueInfo.entry.meeting_id!, reviewer?.name || 'Roaster')}
+                        className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm"
+                      >
+                        Complete & Give Feedback
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -259,6 +306,16 @@ export default function LiveRoastersList({ applicantId }: LiveRoastersListProps)
           )
         })}
       </div>
+
+      {/* Feedback Modal */}
+      {feedbackModal && (
+        <FeedbackModal
+          meetingId={feedbackModal.meetingId}
+          otherUserName={feedbackModal.reviewerName}
+          onSubmit={handleFeedbackSubmit}
+          onClose={() => setFeedbackModal(null)}
+        />
+      )}
     </div>
   )
 }

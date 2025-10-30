@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Database } from '@/lib/database.types'
 import { goLive, endLiveSession, getCurrentLiveSession, getSessionQueue, skipQueueEntry, completeQueueEntry } from '@/lib/live-queue'
+import FeedbackModal from './FeedbackModal'
+import { createClient } from '@/lib/supabase'
 
 type LiveSession = Database['public']['Tables']['live_sessions']['Row']
 type QueueEntry = Database['public']['Tables']['queue_entries']['Row'] & {
@@ -22,6 +24,7 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [processingNext, setProcessingNext] = useState(false)
+  const [feedbackModal, setFeedbackModal] = useState<{ entryId: string; meetingId: string; applicantName: string } | null>(null)
 
   useEffect(() => {
     loadSession()
@@ -140,15 +143,47 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
     }
   }
 
-  const handleComplete = async (entryId: string) => {
+  const handleComplete = async (entryId: string, meetingId: string, applicantName: string) => {
+    // Show feedback modal first
+    setFeedbackModal({ entryId, meetingId, applicantName })
+  }
+
+  const handleFeedbackSubmit = async (meetingId: string, helpful: boolean, notes?: string) => {
+    if (!feedbackModal) return
+
     setError(null)
     try {
-      const result = await completeQueueEntry(entryId)
+      const supabase = createClient()
+
+      // Update the meeting with reviewer's feedback
+      await (supabase as any)
+        .from('meetings')
+        .update({
+          reviewer_completed: true,
+          reviewer_feedback_helpful: helpful,
+          reviewer_notes: notes
+        })
+        .eq('id', meetingId)
+
+      // Check if both parties completed and increment roast counts if needed
+      await fetch('/api/complete-meeting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ meetingId }),
+      })
+
+      // Complete the queue entry
+      const result = await completeQueueEntry(feedbackModal.entryId)
       if (result.success) {
         await loadQueue()
+        onSessionChange?.()
       } else {
         setError(result.error || 'Failed to complete entry')
       }
+
+      setFeedbackModal(null)
     } catch (err) {
       setError('An unexpected error occurred')
     }
@@ -307,7 +342,11 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
                 </button>
               )}
               <button
-                onClick={() => handleComplete(currentEntry.id)}
+                onClick={() => handleComplete(
+                  currentEntry.id,
+                  (currentEntry as any).meeting_id || '',
+                  (currentEntry.applicant as any)?.name || 'Applicant'
+                )}
                 className="py-1 px-3 text-xs bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Complete
@@ -359,6 +398,16 @@ export default function LiveSessionControl({ reviewerId, onSessionChange }: Live
           <p className="text-sm">No one in queue</p>
           <p className="text-xs mt-1">Waiting for applicants to join...</p>
         </div>
+      )}
+
+      {/* Feedback Modal */}
+      {feedbackModal && (
+        <FeedbackModal
+          meetingId={feedbackModal.meetingId}
+          otherUserName={feedbackModal.applicantName}
+          onSubmit={handleFeedbackSubmit}
+          onClose={() => setFeedbackModal(null)}
+        />
       )}
     </div>
   )
