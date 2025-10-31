@@ -65,6 +65,9 @@ export default function Home() {
             <p className="text-xs text-gray-400 text-center">
               By using <span className="myc-font" style={{ color: '#FF6600' }}>MYC</span>, you agree to receive brutally honest feedback
             </p>
+            <p className="text-xs text-gray-400 text-center mt-2">
+              Not affiliated with Y Combinator
+            </p>
           </div>
         </div>
       </div>
