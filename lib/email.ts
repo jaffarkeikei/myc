@@ -110,6 +110,7 @@ export async function sendRoastConfirmationEmails(data: RoastConfirmationEmailDa
             <div class="footer">
               <p>This link expires in 24 hours.</p>
               <p>By using MYC, you agree to receive brutally honest feedback.</p>
+              <p>Not affiliated with Y Combinator</p>
             </div>
           </body>
         </html>
